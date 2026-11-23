@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/OWNER/REPO?include_prereleases&label=download&color=3B82F6&style=for-the-badge" alt="Download"></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/darkmass2156/pcs-releases?include_prereleases&label=download&color=3B82F6&style=for-the-badge" alt="Download"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-22D3EE?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 10 | 11">
   <img src="https://img.shields.io/badge/status-early%20alpha-F0A23B?style=for-the-badge" alt="Early alpha">
 </p>

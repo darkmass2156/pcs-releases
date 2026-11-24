@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- PCS setup (2026-11-23, owner: installing through a console window looks sketchy). .NET Framework 4.8 (built into
+       Windows 10 / 11), so the exe is only the installer plus the payload. Built by tools\standalone\build.ps1 twice:
+       with Payload=<zip> -> PCS-Setup-<ver>.exe (installs / updates), without -> "Uninstall PCS.exe" (small). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\pc_app\pcs.ico</ApplicationIcon>
+    <AssemblyName>PcsSetup</AssemblyName>
+    <RootNamespace>PcsSetup</RootNamespace>
+    <Version>0.5.0</Version>
+    <Product>PCS</Product>
+    <Company>PCS</Company>
+    <Description>PCS setup</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Payload)' != ''">
+    <EmbeddedResource Include="$(Payload)" LogicalName="payload.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\pc_app\pcs.ico" LogicalName="pcs.ico" />
+  </ItemGroup>
+</Project>

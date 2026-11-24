@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Standalone sensor reader (2026-11-22): LibreHardwareMonitorLib + PawnIO, no HWiNFO.
+       Uses the copy of LibreHardwareMonitorLib that ships with FanControl (lib/ is filled by build.ps1). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\</OutputPath>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="LibreHardwareMonitorLib"><HintPath>lib\LibreHardwareMonitorLib.dll</HintPath></Reference>
+    <Reference Include="HidSharp"><HintPath>lib\HidSharp.dll</HintPath></Reference>
+    <Reference Include="DiskInfoToolkit"><HintPath>lib\DiskInfoToolkit.dll</HintPath></Reference>
+    <Reference Include="RAMSPDToolkit-NDD"><HintPath>lib\RAMSPDToolkit-NDD.dll</HintPath></Reference>
+    <Reference Include="BlackSharp.Core"><HintPath>lib\BlackSharp.Core.dll</HintPath></Reference>
+    <Reference Include="System.Management"><HintPath>lib\System.Management.dll</HintPath></Reference>
+    <Reference Include="System.IO.Ports"><HintPath>lib\System.IO.Ports.dll</HintPath></Reference>
+    <Reference Include="NvAPIWrapper"><HintPath>lib\NvAPIWrapper.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>lib\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="Mono.Posix.NETStandard"><HintPath>lib\Mono.Posix.NETStandard.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Win32.TaskScheduler"><HintPath>lib\Microsoft.Win32.TaskScheduler.dll</HintPath></Reference>
+    <!-- native helpers -->
+    <None Include="lib\MonoPosixHelper.dll;lib\libMonoPosixHelper.dll" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

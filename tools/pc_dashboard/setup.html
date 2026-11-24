@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCS Setup</title>
+<script src="/theme.js"></script>
+<script src="/boards.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root { --bg: #0D1117; --card: #161B22; --card2: #1F2630; --label: #E6EDF3; --label2: rgba(230,237,243,.62); --label3: rgba(230,237,243,.30);
+  --sep: rgba(240,246,252,.09); --fill: rgba(240,246,252,.06); --accent: #3B82F6; --accent2: #22D3EE; --on-accent: #fff; --blue: #3B82F6;
+  --teal: #22D3EE; --green: #3FB950; --orange: #F0A23B; --red: #F85149; --yellow: #E3B341;
+  --font: "Plus Jakarta Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font: 14px/1.45 var(--font); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(900px 520px at 12% -8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+              radial-gradient(800px 600px at 100% 0%, color-mix(in srgb, var(--blue) 12%, transparent), transparent 70%); }
+main { max-width: 1360px; margin: 0 auto; padding: 30px 40px 56px; }
+.step { color: var(--label2); font-weight: 600; font-size: 13px; letter-spacing: .02em; }
+h1 { margin: 6px 0 6px; font-size: 34px; font-weight: 650; letter-spacing: -.025em; }
+.lead { color: var(--label2); font-size: 15px; max-width: 760px; }
+.dets { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+.det { display: inline-flex; align-items: center; gap: 12px; padding: 10px 16px 10px 12px; border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--sep); }
+.det i { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.det i svg { width: 17px; height: 17px; }
+.det b { font-weight: 650; }
+.det span { color: var(--label2); font-size: 13px; display: block; }
+.grid { margin-top: 24px; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+.card { background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--sep); border-radius: 20px; backdrop-filter: blur(20px); }
+.preview { padding: 18px 18px 8px; }
+.preview .ph { display: flex; align-items: baseline; gap: 10px; padding: 0 4px 6px; }
+.preview .ph b { font-size: 17px; font-weight: 650; }
+.preview .ph span { color: var(--label2); font-size: 13px; }
+#big { width: 100%; height: auto; display: block; }
+.list { padding: 18px; }
+.list h2 { margin: 0 0 4px; font-size: 16px; font-weight: 650; }
+.list p { margin: 0 0 14px; color: var(--label2); font-size: 13px; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opt { border: 1px solid var(--sep); background: var(--fill); border-radius: 16px; padding: 10px 10px 12px; cursor: pointer; text-align: left;
+  color: var(--label); font: inherit; transition: border-color .15s, box-shadow .15s, transform .1s; }
+.opt:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--sep)); }
+.opt:active { transform: scale(.99); }
+.opt.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent); }
+.opt svg { width: 100%; height: auto; display: block; border-radius: 10px; }
+.opt b { display: block; margin-top: 8px; font-size: 13.5px; font-weight: 650; }
+.opt small { color: var(--label2); font-size: 12px; }
+.opt .badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+  background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); vertical-align: 1px; }
+.tools { display: flex; gap: 10px; align-items: center; margin: 0 0 12px; }
+.tools input[type=search] { flex: 1; min-width: 0; border: 1px solid var(--sep); background: var(--fill); color: var(--label); border-radius: 10px; padding: 8px 11px; font: inherit; }
+.tools .all { color: var(--label2); font-size: 13px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.opts { max-height: 640px; overflow: auto; padding: 2px; }
+.opt .sock { color: var(--label3); }
+.actions { margin-top: 18px; display: flex; gap: 10px; align-items: center; }
+.btn { border: 0; border-radius: 12px; padding: 11px 20px; font: 650 14px var(--font); cursor: pointer; }
+.btn.go { background: var(--accent-grad, var(--accent)); color: var(--on-accent); box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 32%, transparent); }
+.btn.ghost { background: var(--fill); color: var(--label); }
+.note { color: var(--label2); font-size: 12.5px; margin-top: 14px; }
+@media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { main { padding: 20px 16px 40px; } .opts { grid-template-columns: 1fr 1fr; } h1 { font-size: 27px; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell">
+<aside class="rail" data-page="settings"></aside>
+<main>
+  <div class="step">Setup</div>
+  <h1>Which motherboard is this?</h1>
+  <div class="lead">PCS draws your board live: temperatures on the parts that make the heat, every fan header wired to its fan. We read your processor first and show the boards that fit its socket. Pick yours, or the generic one if it isn't listed yet.</div>
+  <div class="dets">
+  <div class="det"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6v6H9z"/></svg></i>
+    <div><b id="cpuName">Reading the processor…</b><span id="cpuSub">&nbsp;</span></div></div>
+  <div class="det" id="det"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg></i>
+    <div><b id="detName">Detecting…</b><span id="detSub">Reading the board from Windows</span></div></div>
+  </div>
+
+  <div class="grid">
+    <section class="card preview">
+      <div class="ph"><b id="pvName">–</b><span id="pvSub"></span></div>
+      <svg id="big"></svg>
+    </section>
+    <section class="card list">
+      <h2 id="lh">Boards</h2>
+      <p id="lp">More boards are added over time; the generic board works with any ATX motherboard.</p>
+      <div class="tools"><input id="q" type="search" placeholder="Search boards" autocomplete="off"><label class="all"><input type="checkbox" id="all"> All sockets</label></div>
+      <div class="opts" id="opts"></div>
+      <div class="actions"><button class="btn go" id="use">Use this board</button><button class="btn ghost" id="skip">Not now</button></div>
+      <div class="note" id="note"></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const next = new URLSearchParams(location.search).get("next") || "/home";
+let chosen = null, detected = null, D = {}, socket = "";
+
+function shown() {
+  const q = $("q").value.trim().toLowerCase(), all = $("all").checked || !socket;
+  return PCSBoard.list().filter(id => { const b = PCSBoard.boards[id];
+    if (b.generic || id === chosen || id === detected) return true;
+    if (!all && b.socket !== socket) return false;
+    return !q || `${b.vendor} ${b.name} ${b.chipset || ""} ${b.socket || ""}`.toLowerCase().includes(q); })
+    .sort((x, y) => { const a = PCSBoard.boards[x], b = PCSBoard.boards[y];
+      const r = v => v.generic ? 3 : v.id === detected ? 0 : v.socket === socket ? 1 : 2;
+      return r(a) - r(b) || (a.vendor + a.name).localeCompare(b.vendor + b.name); });
+}
+function renderOpts() {
+  const ids = shown(), n = PCSBoard.list().filter(id => PCSBoard.boards[id].socket === socket).length, only = socket && !$("all").checked;
+  $("lh").textContent = only ? `Boards for ${socket}` : "All boards";
+  $("all").parentElement.hidden = !socket;               // no socket known = every board is listed already
+  $("lp").textContent = only
+    ? (n ? `${n} drawn board${n > 1 ? "s" : ""} fit your processor. Not there? Tick "All sockets", or use the generic board.` : `No ${socket} board drawn yet. The generic board works with any ATX motherboard.`)
+    : "Every drawn board; the generic one works with any ATX motherboard.";
+  $("opts").innerHTML = ids.map(id => { const b = PCSBoard.boards[id];
+    return `<button class="opt${id === chosen ? " on" : ""}" data-id="${id}"><svg data-thumb="${id}"></svg>
+      <b>${b.name}${id === detected ? '<span class="badge">Detected</span>' : ""}</b><small>${b.generic ? "Any ATX board · fans from the sensors" : `${b.vendor} · ${b.chipset || b.form} <span class="sock">· ${b.socket || ""}</span>`}</small></button>`; }).join("");
+  $("opts").querySelectorAll("[data-thumb]").forEach(s => PCSBoard.draw(s, PCSBoard.boards[s.dataset.thumb], { thumb: true }));
+  $("opts").querySelectorAll(".opt").forEach(b => b.onclick = () => { chosen = b.dataset.id; renderOpts(); preview(); });
+}
+$("q").oninput = renderOpts; $("all").onchange = renderOpts;
+function preview() {
+  const b = PCSBoard.boards[chosen];
+  $("pvName").textContent = b.name;
+  $("pvSub").textContent = b.generic ? "Live preview · works with any ATX board" : `Live preview with your sensors · ${b.socket || ""}${b.socket && socket && b.socket !== socket ? " (your CPU is " + socket + ")" : ""}`;
+  PCSBoard.draw($("big"), b);
+  PCSBoard.update($("big"), D);
+}
+async function live() {
+  try { D = await (await fetch("/pcdetail", { cache: "no-store" })).json(); } catch (e) {}
+  if (chosen) PCSBoard.update($("big"), D);
+}
+async function init() {
+  let pref = {}, det = {};
+  try { pref = await (await fetch("/prefs")).json(); } catch (e) {}
+  try { det = await (await fetch("/board/detect")).json(); } catch (e) {}
+  const name = [det.maker, det.product].filter(Boolean).join(" · ");
+  socket = PCSBoard.socketOf(det.cpu, det.socket);
+  $("cpuName").textContent = det.cpu || "Processor not reported";
+  $("cpuSub").textContent = socket ? `Socket ${socket}` : "Socket unknown · showing every board";
+  detected = PCSBoard.match(name);
+  $("detName").textContent = det.product ? det.product : "Board not reported";
+  $("detSub").textContent = det.product ? (detected ? `${det.maker} · we have this board drawn` : `${det.maker} · not drawn yet, the generic board fits`) : "Pick it from the list";
+  chosen = pref.board && PCSBoard.boards[pref.board] ? pref.board : detected || "generic-atx";
+  renderOpts(); await live(); preview();
+  setInterval(live, 2000);
+}
+$("use").onclick = async () => {
+  try {
+    await fetch("/prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ board: chosen }) });
+    location.href = next;
+  } catch (e) { $("note").textContent = "The PCS service did not answer."; }
+};
+$("skip").onclick = () => { location.href = next; };
+addEventListener("pcs-theme", () => { renderOpts(); preview(); });
+init();
+</script>
+</body>
+</html>

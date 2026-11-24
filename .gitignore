@@ -1,0 +1,12 @@
+bin/
+bin_new/
+obj/
+dist/
+dist_sa/
+out/
+vendor/
+lib/
+logs/
+__pycache__/
+*.pyc
+last_program.txt

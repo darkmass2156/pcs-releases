@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCS</title>
+<script src="/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root { --bg: #0D1117; --card: #161B22; --card2: #1F2630; --label: #E6EDF3; --label2: rgba(230,237,243,.62); --label3: rgba(230,237,243,.30);
+  --sep: rgba(240,246,252,.09); --fill: rgba(240,246,252,.06); --accent: #3B82F6; --accent2: #22D3EE; --on-accent: #fff; --blue: #3B82F6; --teal: #22D3EE;
+  --green: #3FB950; --orange: #F0A23B; --red: #F85149; --yellow: #E3B341; --hero: #3B82F6; --on-hero: #fff;
+  --font: "Plus Jakarta Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font: 14px/1.45 var(--font); -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum", "cv11", "ss01"; }
+body { min-height: 100vh; }
+/* soft colour field behind everything, from the palette */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(900px 520px at 12% -8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+              radial-gradient(800px 600px at 100% 0%, color-mix(in srgb, var(--blue) 12%, transparent), transparent 70%); }
+main { max-width: 1360px; margin: 0 auto; padding: 30px 40px 56px; }
+.head { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 26px; }
+.head .hi { color: var(--label2); font-size: 14px; font-weight: 500; }
+.head h1 { margin: 4px 0 0; font-size: 33px; line-height: 1.15; font-weight: 650; letter-spacing: -.025em; }
+.head .spacer { flex: 1; }
+.chip { display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px 8px 12px; border-radius: 999px; background: var(--card);
+  border: 1px solid var(--sep); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent); }
+.chip.bad i { background: var(--red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 22%, transparent); }
+.chip.warn i { background: var(--orange); box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 22%, transparent); }
+.chip span { color: var(--label2); font-weight: 500; }
+
+.card { background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--sep); border-radius: 20px; min-width: 0;
+  backdrop-filter: blur(20px); }
+.lbl { color: var(--label2); font-size: 13px; font-weight: 600; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; display: grid; grid-template-columns: 340px 1fr; min-height: 360px; padding: 0; }
+.hero::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(520px 380px at 0% 100%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
+              radial-gradient(600px 400px at 100% 0%, color-mix(in srgb, var(--blue) 18%, transparent), transparent 70%); }
+.hl { position: relative; padding: 30px 32px; display: flex; flex-direction: column; }
+.big { font-size: 108px; font-weight: 600; letter-spacing: -.055em; line-height: .9; margin: 18px 0 0; white-space: nowrap; }
+.big sup { font-size: 34px; font-weight: 500; letter-spacing: 0; vertical-align: top; position: relative; top: 14px; margin-left: 6px;
+  color: var(--label2); }
+.trend { margin-top: 14px; color: var(--label2); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.trend b { color: var(--label); font-weight: 650; }
+.stats { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--label) 6%, transparent); }
+.stat .lbl { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat .v { font-size: 22px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; }
+.stat .v small { font-size: 13px; font-weight: 500; color: var(--label2); margin-left: 2px; }
+.stat.safe .v { color: var(--green); } .stat.near .v { color: var(--orange); } .stat.danger .v { color: var(--red); }
+.hr { position: relative; padding: 22px 22px 16px 4px; display: flex; flex-direction: column; }
+.hr .top { display: flex; align-items: center; gap: 16px; padding-left: 14px; }
+.legend { display: flex; gap: 16px; color: var(--label2); font-size: 12.5px; font-weight: 500; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--fill); margin-left: auto; }
+.seg button { border: 0; background: none; color: var(--label2); font: 600 12px var(--font); padding: 5px 11px; border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--card); color: var(--label); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+#chart { flex: 1; width: 100%; min-height: 250px; display: block; }
+#chart text { fill: var(--label3); font: 500 11px var(--font); }
+.pulse { animation: pcsPulse 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pcsPulse { 0% { opacity: .55; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
+
+/* ---------- mode dock ---------- */
+.dock { margin-top: 16px; padding: 18px 20px 16px; }
+.dockhead { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.dockhead h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+.dockhead span { color: var(--label2); font-size: 13px; }
+.modes { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 6px; border-radius: 16px;
+  background: var(--fill); }
+.slider { position: absolute; top: 6px; bottom: 6px; left: 6px; border-radius: 12px; background: var(--accent-grad, var(--accent));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 38%, transparent); transition: transform .45s cubic-bezier(.2,.9,.2,1), width .45s;
+  opacity: 0; }
+.mode { position: relative; z-index: 1; border: 0; background: none; color: var(--label); font: inherit; cursor: pointer; border-radius: 12px;
+  padding: 14px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; transition: color .3s, background .15s; }
+.mode:hover:not(.on) { background: color-mix(in srgb, var(--label) 5%, transparent); }
+.mode svg { width: 24px; height: 24px; opacity: .85; }
+.mode b { font-size: 13.5px; font-weight: 650; }
+.mode small { font-size: 11.5px; color: var(--label2); text-align: center; line-height: 1.3; transition: color .3s; }
+.mode.on { color: var(--on-accent); }
+.mode.on small { color: color-mix(in srgb, var(--on-accent) 78%, transparent); }
+.mode.on svg { opacity: 1; }
+.mode.busy { opacity: .55; pointer-events: none; }
+.msg { color: var(--red); font-size: 13px; min-height: 0; margin-top: 8px; }
+
+/* ---------- bento ---------- */
+.bento { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.tile { padding: 18px 20px 18px; display: flex; flex-direction: column; min-height: 214px; }
+.tile .th { display: flex; align-items: center; gap: 8px; }
+.tile .th svg { width: 17px; height: 17px; color: var(--label2); }
+.tile .th .lbl { flex: 1; }
+.tile .th em { font-style: normal; font-size: 12px; color: var(--label3); font-weight: 600; }
+.gauge { position: relative; width: 132px; height: 132px; margin: 12px auto 4px; }
+.gauge svg { width: 100%; height: 100%; transform: rotate(135deg); }
+.gauge .bgarc { stroke: var(--fill); }
+.gauge .arc { transition: stroke-dashoffset .8s cubic-bezier(.2,.9,.2,1), stroke .4s; }
+.gauge .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.gauge .c b { display: block; font-size: 32px; font-weight: 650; letter-spacing: -.04em; line-height: 1; }
+.gauge .c span { font-size: 12px; color: var(--label2); font-weight: 500; }
+.kv { margin-top: auto; display: flex; justify-content: space-between; gap: 8px; color: var(--label2); font-size: 13px; }
+.kv b { color: var(--label); font-weight: 650; }
+.fanwrap { display: flex; align-items: center; gap: 16px; margin: 16px 0 10px; }
+.fan { width: 74px; height: 74px; flex: none; color: var(--accent); }
+.fan svg { width: 100%; height: 100%; animation: spin 2s linear infinite; animation-play-state: paused; }
+.fan.run svg { animation-play-state: running; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fanv b { font-size: 32px; font-weight: 650; letter-spacing: -.04em; display: block; line-height: 1; }
+.fanv span { color: var(--label2); font-size: 12px; }
+.bars { display: grid; gap: 9px; margin-top: auto; }
+.bar { display: grid; grid-template-columns: 74px 1fr 46px; align-items: center; gap: 10px; font-size: 12.5px; color: var(--label2); }
+.bar b { text-align: right; color: var(--label); font-weight: 650; }
+.track { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.track i { display: block; height: 100%; border-radius: 3px; background: var(--accent-grad, var(--accent)); width: 0; transition: width .8s cubic-bezier(.2,.9,.2,1); }
+.air { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; }
+.air div { padding: 9px 10px; border-radius: 12px; background: var(--fill); }
+.air span { display: block; font-size: 11.5px; color: var(--label2); font-weight: 500; }
+.air b { font-size: 16px; font-weight: 650; letter-spacing: -.01em; }
+.wide { grid-column: span 2; }
+.health .state { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; }
+.health .badge { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex: none;
+  background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.health .badge svg { width: 22px; height: 22px; }
+.health.warn .badge { background: color-mix(in srgb, var(--orange) 16%, transparent); color: var(--orange); }
+.health.bad .badge { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red); }
+.health .state b { font-size: 19px; font-weight: 650; letter-spacing: -.02em; display: block; }
+.health .state span { color: var(--label2); font-size: 13px; }
+.week { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; margin: 16px 0 6px; }
+.week i { height: 30px; border-radius: 8px; background: color-mix(in srgb, var(--green) 22%, transparent); position: relative; }
+.week i.w { background: color-mix(in srgb, var(--yellow) 42%, transparent); }
+.week i.r { background: color-mix(in srgb, var(--orange) 50%, transparent); }
+.week i.c { background: color-mix(in srgb, var(--red) 62%, transparent); }
+.week i.none { background: var(--fill); }
+.week i.today { box-shadow: inset 0 0 0 1.5px var(--label3); }
+.wkey { display: flex; gap: 14px; color: var(--label2); font-size: 11.5px; margin-top: 10px; }
+.wkey i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.weekl { display: flex; justify-content: space-between; color: var(--label3); font-size: 11px; font-weight: 600; }
+.last { margin-top: auto; display: flex; align-items: center; gap: 10px; padding-top: 14px; color: var(--label2); font-size: 13px;
+  border-top: 1px solid var(--sep); }
+.last b { color: var(--label); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.last a { margin-left: auto; color: var(--accent); text-decoration: none; font-weight: 650; white-space: nowrap; }
+.spark { width: 100%; height: 64px; display: block; margin-top: 10px; }
+.pumps { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.pump { padding: 14px; border-radius: 14px; background: var(--fill); }
+.pump span { display: block; color: var(--label2); font-size: 12px; font-weight: 500; }
+.pump b { display: block; font-size: 25px; font-weight: 650; letter-spacing: -.03em; margin-top: 2px; }
+.pump b small { font-size: 13px; color: var(--label2); font-weight: 500; margin-left: 3px; }
+@media (max-width: 1180px) { .bento { grid-template-columns: repeat(2, 1fr); } .hero { grid-template-columns: 300px 1fr; } .big { font-size: 92px; } }
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .hr { padding: 0 12px 14px; } .modes { grid-template-columns: repeat(3, 1fr); }
+  .slider { display: none; } .mode.on { background: var(--accent); } }
+@media (max-width: 720px) { main { padding: 20px 16px 40px; } .bento { grid-template-columns: 1fr; } .wide { grid-column: auto; }
+  .head { flex-wrap: wrap; } .head h1 { font-size: 27px; } .big { font-size: 80px; } .modes { grid-template-columns: repeat(2, 1fr); } }
+/* standalone monitor (other PCs, no controller; 2026-11-23) */
+body.mon .dock, body.mon #tOut, body.mon #tAir { display: none; }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell">
+<aside class="rail" data-page="home"></aside>
+<main>
+  <div class="head">
+    <div><div class="hi" id="hi">Good evening</div><h1 id="headline">Connecting to your cooling…</h1></div>
+    <div class="spacer"></div>
+    <div class="chip" id="chip"><i></i><b id="chipMode">–</b><span id="chipTxt">Live</span></div>
+  </div>
+
+  <section class="card hero">
+    <div class="hl">
+      <div class="lbl" id="heroLbl">Water into your PC</div>
+      <div class="big"><span id="water">--</span><sup>°C</sup></div>
+      <div class="trend" id="trend">&nbsp;</div>
+      <div class="stats">
+        <div class="stat" id="mStat"><div class="lbl" id="l1">Above dew point</div><div class="v" id="margin">--</div></div>
+        <div class="stat"><div class="lbl" id="l2">Dew point</div><div class="v" id="dp">--</div></div>
+        <div class="stat"><div class="lbl" id="l3">Loop return</div><div class="v" id="t1">--</div></div>
+        <div class="stat"><div class="lbl" id="l4">Outdoor radiator</div><div class="v" id="t3">--</div></div>
+      </div>
+    </div>
+    <div class="hr">
+      <div class="top">
+        <div class="legend" id="legend"><span><i style="background:var(--accent-grad, var(--accent))"></i>Water</span><span><i style="background:var(--teal)"></i>Outdoor</span><span><i style="background:var(--label3)"></i>Dew point</span></div>
+        <div class="seg" id="range"><button data-m="15">15 min</button><button data-m="60" class="on">1 h</button><button data-m="240">4 h</button></div>
+      </div>
+      <svg id="chart" preserveAspectRatio="none"></svg>
+    </div>
+  </section>
+
+  <section class="card dock">
+    <div class="dockhead"><h2>Cooling mode</h2><span id="modeDesc">–</span></div>
+    <div class="modes" id="modes"><div class="slider" id="slider"></div></div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section class="bento">
+    <div class="card tile">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg><div class="lbl">Processor</div><em id="cpuW">--</em></div>
+      <div class="gauge" id="gCpu"></div>
+      <div class="kv"><span>Package power</span><b id="cpuW2">--</b></div>
+    </div>
+    <div class="card tile">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="9" cy="12" r="3"/><path d="M15 10h4M15 14h4"/></svg><div class="lbl">Graphics</div><em id="gpuW">--</em></div>
+      <div class="gauge" id="gGpu"></div>
+      <div class="kv"><span>Hot spot</span><b id="gpuHot">--</b></div>
+    </div>
+    <div class="card tile" id="tOut">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg><div class="lbl">Outdoor radiator</div><em id="branchState">--</em></div>
+      <div class="fanwrap">
+        <div class="fan" id="fan"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="9" fill="currentColor"/>
+          <g fill="currentColor" opacity=".9"><path d="M50 41c-3-14 2-30 14-33 9-2 13 8 6 15-5 5-13 9-20 18z"/><path d="M59 50c14-3 30 2 33 14 2 9-8 13-15 6-5-5-9-13-18-20z"/>
+          <path d="M50 59c3 14-2 30-14 33-9 2-13-8-6-15 5-5 13-9 20-18z"/><path d="M41 50c-14 3-30-2-33-14-2-9 8-13 15-6 5 5 9 13 18 20z"/></g></svg></div>
+        <div class="fanv"><b id="fanPct">--</b><span id="fanRpm">fans</span></div>
+      </div>
+      <div class="bars">
+        <div class="bar"><span>Valve open</span><div class="track"><i id="v2Bar"></i></div><b id="v2">--</b></div>
+        <div class="bar"><span>Pump P2</span><div class="track"><i id="p2Bar"></i></div><b id="p2">--</b></div>
+      </div>
+    </div>
+    <div class="card tile" id="tAir">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c3 4 6 7.2 6 10.6A6 6 0 0 1 6 13.6C6 10.2 9 7 12 3z"/></svg><div class="lbl">Air and humidity</div><em id="rhTxt">--</em></div>
+      <div class="gauge" id="gRh"></div>
+      <div class="air"><div><span>Room</span><b id="room">--</b></div><div><span>Near CPU</span><b id="airCpu">--</b></div><div><span>Under GPU</span><b id="airGpu">--</b></div></div>
+    </div>
+
+    <div class="card tile wide health" id="health">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21s-7-4.5-9.3-9.2C1 8.3 3.2 4.5 7 4.5c2.2 0 3.6 1.2 5 3 1.4-1.8 2.8-3 5-3 3.8 0 6 3.8 4.3 7.3C19 16.5 12 21 12 21z"/></svg><div class="lbl">Stability</div><em>last 14 days</em></div>
+      <div class="state"><div class="badge" id="hBadge"></div><div><b id="hTitle">Checking…</b><span id="hSub">&nbsp;</span></div></div>
+      <div class="week" id="week"></div>
+      <div class="weekl"><span>2 weeks ago</span><span>today</span></div>
+      <div class="wkey"><span><i style="background:color-mix(in srgb,var(--green) 40%,transparent)"></i>Clean</span><span><i style="background:color-mix(in srgb,var(--yellow) 60%,transparent)"></i>Warnings</span><span><i style="background:color-mix(in srgb,var(--orange) 70%,transparent)"></i>Hard reset</span><span><i style="background:var(--red)"></i>Blue screen</span></div>
+      <div class="last"><span>Latest</span><b id="lastInc">–</b><a href="/analyzer">Analyzer →</a></div>
+    </div>
+    <div class="card tile wide">
+      <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><div class="lbl" id="sparkLbl">Processor temperature</div><em id="cpuRange">--</em></div>
+      <svg class="spark" id="spark" preserveAspectRatio="none"></svg>
+      <div class="pumps">
+        <div class="pump"><span id="p1Lbl">Pump P1 · in the PC</span><b id="p1">--<small>rpm</small></b></div>
+        <div class="pump"><span id="heatLbl">Heat into the loop</span><b id="heat">--<small>W</small></b></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const f1 = v => v == null ? "--" : (+v).toFixed(1);
+const MODES = [
+  ["passive", "Passive", "Load-aware fans", '<path d="M5 19c0-8 6-14 15-14-1 9-6 15-14 15"/><path d="M5 19 13 11"/>',
+   "Outdoor branch off. Case fans and pump follow CPU and GPU load."],
+  ["daily", "Daily", "Quiet at 17 °C", '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+   "The everyday profile. Water held at 17 °C with quiet fans."],
+  ["oc", "Overclocking", "Cold at 12.5 °C", '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+   "Maximum headroom. Water held at 12.5 °C, never closer than 4 °C to the dew point."],
+  ["auto", "Auto", "Dew point + 10", '<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/>',
+   "Adapts to the room: water held 10 °C above the dew point."],
+  ["bench", "Benchmark", "Dew point + 5", '<path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 18 4-6"/>',
+   "For runs and scores: water held 5 °C above the dew point."],
+  ["off", "Off", "Defaults", '<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>',
+   "Outdoor branch off, fans on their defaults."],
+];
+const icon = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+let S = null, H = null, current = null, rangeMin = 60;
+
+// ---------- number tweening ----------
+const shown = {};
+function tween(id, to, dec = 1, suffix = "") {
+  const el = $(id);
+  if (to == null || isNaN(to)) { el.innerHTML = "--"; shown[id] = null; return; }
+  const from = shown[id] ?? to, t0 = performance.now(), d = 700;
+  shown[id] = to;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3);
+    el.innerHTML = (from + (to - from) * e).toFixed(dec) + suffix;
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ---------- gauges ----------
+function gauge(el, frac, value, unit, color) {
+  const R = 52, C = 2 * Math.PI * R, arc = C * .75;
+  if (!el.firstChild) {
+    el.innerHTML = `<svg viewBox="0 0 132 132"><circle class="bgarc" cx="66" cy="66" r="${R}" fill="none" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${arc} ${C}"/><circle class="arc" cx="66" cy="66" r="${R}" fill="none" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${arc} ${C}" stroke-dashoffset="${arc}"/></svg><div class="c"><div><b>--</b><span></span></div></div>`;
+  }
+  const a = el.querySelector(".arc");
+  a.style.stroke = color;
+  a.style.strokeDashoffset = arc * (1 - Math.max(0, Math.min(1, frac || 0)));
+  el.querySelector(".c b").innerHTML = value;
+  el.querySelector(".c span").textContent = unit;
+}
+const heat = t => t == null ? css("--label3") : t < 55 ? css("--green") : t < 75 ? css("--yellow") : t < 88 ? css("--orange") : css("--red");
+
+// ---------- modes ----------
+function drawModes() {
+  const box = $("modes");
+  if (!box.querySelector(".mode")) {
+    box.insertAdjacentHTML("beforeend", MODES.map(([id, n, s, ic]) =>
+      `<button class="mode" data-id="${id}">${icon(ic)}<b>${n}</b><small>${s}</small></button>`).join(""));
+    box.querySelectorAll(".mode").forEach(b => b.onclick = () => pick(b));
+  }
+  let on = null;
+  box.querySelectorAll(".mode").forEach(b => { b.classList.toggle("on", b.dataset.id === current); if (b.dataset.id === current) on = b; });
+  const sl = $("slider");
+  if (on) { sl.style.opacity = 1; sl.style.width = on.offsetWidth + "px"; sl.style.transform = `translateX(${on.offsetLeft - 6}px)`; }
+  else sl.style.opacity = 0;
+  const m = MODES.find(x => x[0] === current);
+  $("modeDesc").textContent = m ? m[4] : "Pick how the outdoor branch and the fans should behave.";
+}
+async function pick(b) {
+  const id = b.dataset.id;
+  if (id === current) return;
+  b.classList.add("busy"); $("msg").textContent = "";
+  const prev = current; current = id; drawModes();
+  try {
+    const r = await fetch("/prog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p: id }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { current = prev; $("msg").textContent = d.msg || "That mode is not available right now."; }
+  } catch (e) { current = prev; $("msg").textContent = "The PCS service did not answer."; }
+  b.classList.remove("busy"); drawModes(); poll();
+}
+addEventListener("resize", drawModes);
+
+// ---------- hero chart ----------
+function chart() {
+  const svg = $("chart"), W = svg.clientWidth || 800, Hh = svg.clientHeight || 260;
+  svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`);
+  if (!H || !H.t || H.t.length < 2) { svg.innerHTML = `<text x="${W / 2}" y="${Hh / 2}" text-anchor="middle">Collecting history…</text>`; return; }
+  const water = MON ? H.Tcpu : H.t.map((t, i) => (H.Tcube || [])[i] ?? (H.T2 || [])[i]), dp = MON || !H.DP ? H.t.map(() => null) : H.DP, out = (MON ? H.Tgpu : H.T3) || H.t.map(() => null);
+  const all = [...water, ...dp, ...out].filter(v => v != null);
+  let lo = Math.floor(Math.min(...all) - 1), hi = Math.ceil(Math.max(...all) + 1);
+  if (hi - lo < 8) { const m = (hi + lo) / 2; lo = Math.floor(m - 4); hi = Math.ceil(m + 4); }
+  const L = 46, R = 18, T = 14, B = 26, t0 = H.t[0], t1 = H.t[H.t.length - 1];
+  const X = t => L + (t - t0) / Math.max(1, t1 - t0) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (Hh - T - B);
+  const path = arr => { let d = "", pen = false; arr.forEach((v, i) => { if (v == null) { pen = false; return; }
+    d += (pen ? "L" : "M") + X(H.t[i]).toFixed(1) + " " + Y(v).toFixed(1); pen = true; }); return d; };
+  // smooth: Catmull-Rom → cubic Bézier for the water line
+  const smooth = arr => { const p = arr.map((v, i) => v == null ? null : [X(H.t[i]), Y(v)]).filter(Boolean); if (p.length < 2) return "";
+    let d = `M${p[0][0]} ${p[0][1]}`; for (let i = 0; i < p.length - 1; i++) { const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
+      d += `C${b[0] + (c[0] - a[0]) / 6} ${b[1] + (c[1] - a[1]) / 6} ${c[0] - (e[0] - b[0]) / 6} ${c[1] - (e[1] - b[1]) / 6} ${c[0]} ${c[1]}`; } return d; };
+  const wp = smooth(water);
+  // band between dew point and water = the safety margin
+  let band = "";
+  const idx = H.t.map((_, i) => i).filter(i => water[i] != null && dp[i] != null);
+  if (idx.length > 1) band = "M" + idx.map(i => `${X(H.t[i])} ${Y(water[i])}`).join("L") + "L" + idx.reverse().map(i => `${X(H.t[i])} ${Y(dp[i])}`).join("L") + "Z";
+  let grid = "";
+  const stepV = (hi - lo) > 24 ? 10 : (hi - lo) > 12 ? 5 : 2;
+  for (let v = Math.ceil(lo / stepV) * stepV; v <= hi; v += stepV)
+    grid += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--sep")}" stroke-width="1"/><text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${v}°</text>`;
+  const ago = m => m >= 60 ? (m / 60) + " h ago" : m + " min ago";
+  const xl = `<text x="${L}" y="${Hh - 6}">${ago(rangeMin)}</text><text x="${W - R}" y="${Hh - 6}" text-anchor="end">now</text>`;
+  const li = water.length - 1, lx = X(H.t[li]), ly = water[li] == null ? null : Y(water[li]);
+  const acc = css("--accent"), acc2 = css("--accent2") || acc;
+  svg.innerHTML = `<defs>
+      <linearGradient id="gLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${acc2}"/><stop offset="1" stop-color="${acc}"/></linearGradient>
+      <linearGradient id="gBand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${acc}" stop-opacity=".30"/><stop offset="1" stop-color="${acc}" stop-opacity=".02"/></linearGradient>
+      <filter id="glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>${grid}${xl}
+    <path d="${band}" fill="url(#gBand)"/>
+    <path d="${path(dp)}" fill="none" stroke="${css("--label3")}" stroke-width="1.6" stroke-dasharray="5 5"/>
+    <path d="${path(out)}" fill="none" stroke="${css("--teal")}" stroke-width="1.8" opacity=".9"/>
+    <path d="${wp}" fill="none" stroke="url(#gLine)" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+    ${ly == null ? "" : `<circle cx="${lx}" cy="${ly}" r="5" fill="${acc}" class="pulse"/><circle cx="${lx}" cy="${ly}" r="5" fill="${acc}" stroke="${css("--card")}" stroke-width="2.5"/>`}`;
+  // CPU sparkline
+  const sp = $("spark"), SW = sp.clientWidth || 500, SH = 64;
+  sp.setAttribute("viewBox", `0 0 ${SW} ${SH}`);
+  const SP = (MON ? H.Tgpu : H.Tcpu) || [];
+  const cv = SP.filter(v => v != null);
+  if (cv.length > 1) {
+    const a = Math.min(...cv) - 2, b = Math.max(...cv) + 2, sx = i => i / (SP.length - 1) * SW, sy = v => 4 + (b - v) / (b - a) * (SH - 8);
+    let d = ""; SP.forEach((v, i) => { if (v != null) d += (d ? "L" : "M") + sx(i).toFixed(1) + " " + sy(v).toFixed(1); });
+    sp.innerHTML = `<defs><linearGradient id="gSp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${css("--blue")}" stop-opacity=".35"/><stop offset="1" stop-color="${css("--blue")}" stop-opacity="0"/></linearGradient></defs>
+      <path d="${d}L${SW} ${SH}L0 ${SH}Z" fill="url(#gSp)"/><path d="${d}" fill="none" stroke="${css("--blue")}" stroke-width="2"/>`;
+    $("cpuRange").textContent = `${Math.round(Math.min(...cv))}–${Math.round(Math.max(...cv))} °C`;
+  }
+  // trend of the water over the last 10 min
+  const n = H.t.length, back = H.t.findIndex(t => t >= t1 - 600);
+  const w0 = water[Math.max(0, back)], w1 = water[n - 1];
+  if (w0 != null && w1 != null) {
+    const d = w1 - w0, arrow = Math.abs(d) < .15 ? "→" : d > 0 ? "↗" : "↘";
+    $("trend").innerHTML = `${arrow} <b>${d >= 0 ? "+" : "−"}${Math.abs(d).toFixed(1)} °C</b> in the last 10 minutes`;
+  }
+}
+$("range").querySelectorAll("button").forEach(b => b.onclick = () => {
+  rangeMin = +b.dataset.m; $("range").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); loadHistory();
+});
+addEventListener("resize", chart);
+addEventListener("pcs-theme", () => { chart(); render(); });
+
+// ---------- render ----------
+function headline(s) {
+  if (!s) return ["PCS service not running", "bad"];
+  if (!s.connected) return ["Controller offline", "bad"];
+  if (s.faults) return ["Branch in its safe state", "bad"];
+  const set = s.t2set ?? s.Tset, t2 = s.T2;
+  if (!s.pen || set == null || t2 == null)
+    return [s.program === "passive" ? "Cooling with the PC's own radiators" : "Outdoor branch is resting", s.alarms ? "warn" : ""];
+  const e = t2 - set;
+  return [e > 1.5 ? `Cooling down to ${f1(set)} °C` : e < -1 ? `Easing off, holding ${f1(set)} °C` :
+          Math.abs(e) <= .5 ? `Holding a steady ${f1(set)} °C` : `Settling at ${f1(set)} °C`, s.alarms ? "warn" : ""];
+}
+let MON = false;
+function monitorMode() {          // the service runs without a controller: the hero becomes the processor
+  MON = true;
+  document.body.classList.add("mon");
+  $("heroLbl").textContent = "Processor";
+  [["l1", "Processor power"], ["l2", "Processor load"], ["l3", "Graphics hot spot"], ["l4", "Graphics power"]].forEach(([k, v]) => $(k).textContent = v);
+  $("legend").innerHTML = '<span><i style="background:var(--accent-grad, var(--accent))"></i>Processor</span><span><i style="background:var(--teal)"></i>Graphics hot spot</span>';
+  $("sparkLbl").textContent = "Graphics temperature";
+  $("p1Lbl").textContent = "Graphics load";
+  $("heatLbl").textContent = "Processor + graphics";
+  loadHistory();
+}
+function renderMon(s) {
+  const t = s.cpu_t, w = (s.cpu_w || 0) + (s.gpu_w || 0);
+  const live = t != null || s.gpu_hot != null;
+  window.pcsLive && pcsLive(live);
+  $("headline").textContent = !live ? "Waiting for the sensor reader" : t >= 90 ? `Processor running hot, ${Math.round(t)} °C`
+    : w > 300 ? "Working hard" : w > 120 ? "Busy" : "All quiet";
+  $("chip").className = "chip " + (!live ? "bad" : t >= 90 ? "warn" : "");
+  $("chipMode").textContent = "Monitor";
+  $("chipTxt").textContent = live ? "Live" : "No data";
+  tween("water", t, 1);
+  $("mStat").className = "stat";
+  tween("margin", s.cpu_w, 0, "<small>W</small>");
+  tween("dp", s.cpu_load, 0, "<small>%</small>");
+  tween("t1", s.gpu_hot, 1, "<small>°C</small>");
+  tween("t3", s.gpu_w, 0, "<small>W</small>");
+  gauge($("gCpu"), (t ?? 0) / 100, t == null ? "--" : Math.round(t) + "°", "package", heat(t));
+  $("cpuW").textContent = s.cpu_w == null ? "--" : Math.round(s.cpu_w) + " W";
+  $("cpuW2").textContent = s.cpu_w == null ? "--" : Math.round(s.cpu_w) + " W";
+  gauge($("gGpu"), (s.gpu_hot ?? 0) / 100, s.gpu_hot == null ? "--" : Math.round(s.gpu_hot) + "°", "hot spot", heat(s.gpu_hot));
+  $("gpuW").textContent = s.gpu_w == null ? "--" : Math.round(s.gpu_w) + " W";
+  $("gpuHot").textContent = s.gpu_hot == null ? "--" : f1(s.gpu_hot) + " °C";
+  $("p1").innerHTML = (s.gpu_load == null ? "--" : Math.round(s.gpu_load)) + "<small>%</small>";
+  $("heat").innerHTML = (s.cpu_w == null && s.gpu_w == null ? "--" : Math.round(w)) + "<small>W</small>";
+}
+function render() {
+  const s = S;
+  if (s && s.standalone && !MON) monitorMode();
+  if (MON) {
+    const h = new Date().getHours();
+    $("hi").textContent = (h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + " · " +
+      new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    if (s) renderMon(s); else { $("headline").textContent = "PCS service not running"; $("chip").className = "chip bad"; }
+    return;
+  }
+  window.pcsLive && pcsLive(s && s.connected);
+  const h = new Date().getHours();
+  $("hi").textContent = (h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + " · " +
+    new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const [hl, cls] = headline(s);
+  $("headline").textContent = hl;
+  $("chip").className = "chip " + cls;
+  const m = s && MODES.find(x => x[0] === s.program);
+  $("chipMode").textContent = m ? m[1] : "–";
+  $("chipTxt").textContent = s && s.connected ? "Live" : "Offline";
+  if (!s) return;
+  if (current !== s.program && !document.querySelector(".mode.busy")) { current = s.program; drawModes(); }
+  const water = s.cube ?? s.T2;
+  tween("water", water, 1);
+  const mg = water != null && s.DP != null ? water - s.DP : null;
+  tween("margin", mg, 1, "<small>°C</small>");
+  $("mStat").className = "stat " + (mg == null ? "" : mg >= 6 ? "safe" : mg >= 3 ? "near" : "danger");
+  tween("dp", s.DP, 1, "<small>°C</small>");
+  tween("t1", s.T1, 1, "<small>°C</small>");
+  tween("t3", s.T3, 1, "<small>°C</small>");
+  gauge($("gCpu"), (s.cpu_t ?? 0) / 100, s.cpu_t == null ? "--" : Math.round(s.cpu_t) + "°", "package", heat(s.cpu_t));
+  $("cpuW").textContent = s.cpu_w == null ? "--" : Math.round(s.cpu_w) + " W";
+  $("cpuW2").textContent = s.cpu_w == null ? "--" : Math.round(s.cpu_w) + " W";
+  gauge($("gGpu"), (s.gpu_hot ?? 0) / 100, s.gpu_hot == null ? "--" : Math.round(s.gpu_hot) + "°", "hot spot", heat(s.gpu_hot));
+  $("gpuW").textContent = s.gpu_w == null ? "--" : Math.round(s.gpu_w) + " W";
+  $("gpuHot").textContent = s.gpu_hot == null ? "--" : f1(s.gpu_hot) + " °C";
+  const run = s.connected && s.pen;
+  $("branchState").textContent = !s.connected ? "offline" : run ? "flowing" : "resting";
+  $("fan").classList.toggle("run", !!(s.fan && s.rpmF2));
+  if (s.fan) $("fan").querySelector("svg").style.animationDuration = Math.max(.25, 2.4 - s.fan / 50) + "s";
+  $("fanPct").textContent = s.fan == null ? "--" : Math.round(s.fan) + " %";
+  $("fanRpm").textContent = s.rpmF2 ? Math.round(s.rpmF2) + " rpm · fans" : "fans";
+  $("v2Bar").style.width = (run ? s.v2out ?? 0 : 0) + "%";
+  $("v2").textContent = run && s.v2out != null ? Math.round(s.v2out) + " %" : "shut";
+  $("p2Bar").style.width = (run ? s.pump ?? 0 : 0) + "%";
+  $("p2").textContent = run && s.pump != null ? Math.round(s.pump) + " %" : "off";
+  gauge($("gRh"), (s.RH_R ?? 0) / 100, s.RH_R == null ? "--" : Math.round(s.RH_R) + "%", "room humidity", css("--teal"));
+  $("rhTxt").textContent = s.DP_R == null ? "--" : "dew point " + f1(s.DP_R) + " °C";
+  $("room").textContent = s.Troom == null ? "--" : f1(s.Troom) + "°";
+  $("airCpu").textContent = s.T_B == null ? "--" : f1(s.T_B) + "°";
+  $("airGpu").textContent = s.T_A == null ? "--" : f1(s.T_A) + "°";
+  $("p1").innerHTML = (s.p1_rpm == null ? "--" : Math.round(s.p1_rpm)) + "<small>rpm</small>";
+  $("heat").innerHTML = (s.cpu_w == null && s.gpu_w == null ? "--" : Math.round((s.cpu_w || 0) + (s.gpu_w || 0))) + "<small>W</small>";
+}
+
+// ---------- stability ----------
+const KIND = { crash: "Blue screen", reset: "Hard reset", silent: "Corrected CPU error", whea: "Hardware error", gpu: "GPU driver reset" };
+async function stability() {
+  let d = null;
+  try { d = await (await fetch("/analyzer/state", { cache: "no-store" })).json(); } catch (e) {}
+  const inc = (d && d.incidents) || [];
+  const days = [...Array(14)].map((_, i) => { const x = new Date(); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - 13 + i); return x; });
+  const per = days.map(() => ({ crash: 0, reset: 0, warn: 0 }));
+  inc.forEach(i => { const t = new Date(i.time.replace(" ", "T")); const k = days.findIndex((x, j) => t >= x && (j === 13 || t < days[j + 1]));
+    if (k >= 0) per[k][i.kind === "crash" ? "crash" : i.kind === "reset" ? "reset" : "warn"]++; });
+  const first = inc.length ? new Date(inc[0].time.replace(" ", "T")) : new Date();
+  $("week").innerHTML = per.map((p, j) => {
+    const cls = p.crash ? "c" : p.reset ? "r" : p.warn ? "w" : days[j] < new Date(first.toDateString()) ? "none" : "";
+    const tip = `${days[j].toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}: ` +
+      (p.crash + p.reset + p.warn ? [p.crash && `${p.crash} blue screen${p.crash > 1 ? "s" : ""}`, p.reset && `${p.reset} hard reset${p.reset > 1 ? "s" : ""}`,
+        p.warn && `${p.warn} warning${p.warn > 1 ? "s" : ""}`].filter(Boolean).join(", ") : "clean");
+    return `<i class="${cls}${j === 13 ? " today" : ""}" title="${tip}"></i>`; }).join("");
+  const last = inc[inc.length - 1];
+  const since = last ? (Date.now() - new Date(last.time.replace(" ", "T"))) / 36e5 : null;
+  const box = $("health");
+  const ok = '<path d="M20 6 9 17l-5-5"/>', warn = '<path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>';
+  if (S && S.faults) { box.className = "card tile wide health bad"; $("hBadge").innerHTML = icon(warn); $("hTitle").textContent = "Controller fault"; $("hSub").textContent = "The outdoor branch is in its safe state."; }
+  else if (since != null && since < 24 && (last.kind === "crash" || last.kind === "reset")) { box.className = "card tile wide health bad"; $("hBadge").innerHTML = icon(warn); $("hTitle").textContent = "Crashed recently"; $("hSub").textContent = `${KIND[last.kind]} ${Math.round(since)} h ago.`; }
+  else if (since != null && since < 24) { box.className = "card tile wide health warn"; $("hBadge").innerHTML = icon(warn); $("hTitle").textContent = "Stable, with warnings"; $("hSub").textContent = `${KIND[last.kind] || last.name} ${Math.round(since)} h ago.`; }
+  else { box.className = "card tile wide health"; $("hBadge").innerHTML = icon(ok); $("hTitle").textContent = since == null ? "Rock solid" : `Stable for ${since >= 48 ? Math.floor(since / 24) + " days" : Math.floor(since) + " hours"}`;
+    $("hSub").textContent = "No crashes or hardware errors since then."; }
+  $("lastInc").textContent = last ? `${KIND[last.kind] || last.name}${last.core_label ? " · " + last.core_label : ""} · ${new Date(last.time.replace(" ", "T")).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "Nothing logged";
+}
+
+async function poll() {
+  try { S = await (await fetch("/status", { cache: "no-store" })).json(); } catch (e) { S = null; }
+  render();
+}
+async function loadHistory() {
+  try { H = await (await fetch("/history?min=" + rangeMin, { cache: "no-store" })).json(); } catch (e) { H = null; }
+  chart();
+}
+// first run: pick the motherboard once (setup screen), then come back here
+fetch("/prefs").then(r => r.json()).then(p => { if (!p.board) location.replace("/setup?next=/home"); }).catch(() => {});
+drawModes(); poll(); loadHistory(); stability();
+setInterval(poll, 2000); setInterval(loadHistory, 15000); setInterval(stability, 60000);
+</script>
+</body>
+</html>

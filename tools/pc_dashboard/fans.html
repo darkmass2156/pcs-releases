@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCS Fans</title>
+<!-- Fans tab, step 1 (2026-11-23, docs/changes/fan_tab_proposal.md): READ-ONLY. Shows every fan / pump header, who drives
+     it and why. Sends nothing, writes nothing. Data: GET /fans/state (reader "fans" block, header duty / rpm, fan_req.json;
+     needs the service restart that adds it), GET /status (dashboard requests and reasons), GET /pcdetail (rpm per header,
+     board temperatures). Works with whatever of these answers. -->
+<script src="/theme.js"></script>
+<script src="/boards.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root { --bg: #0D1117; --card: #161B22; --card2: #1F2630; --label: #E6EDF3; --label2: rgba(230,237,243,.62); --label3: rgba(230,237,243,.30);
+  --sep: rgba(240,246,252,.09); --fill: rgba(240,246,252,.06); --accent: #3B82F6; --accent2: #22D3EE; --on-accent: #fff; --blue: #3B82F6;
+  --teal: #22D3EE; --green: #3FB950; --orange: #F0A23B; --red: #F85149; --yellow: #E3B341;
+  --font: "Plus Jakarta Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font: 14px/1.45 var(--font); -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum", "cv11", "ss01"; }
+body { min-height: 100vh; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(900px 520px at 12% -8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+              radial-gradient(800px 600px at 100% 0%, color-mix(in srgb, var(--blue) 12%, transparent), transparent 70%); }
+main { max-width: 1440px; margin: 0 auto; padding: 30px 40px 56px; }
+.head { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 22px; flex-wrap: wrap; }
+.head .hi { color: var(--label2); font-size: 14px; font-weight: 500; }
+.head h1 { margin: 4px 0 0; font-size: 33px; line-height: 1.15; font-weight: 650; letter-spacing: -.025em; }
+.head .spacer { flex: 1; }
+.chip { display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px 8px 12px; border-radius: 999px; background: var(--card);
+  border: 1px solid var(--sep); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--label3); flex: none; }
+.chip.pcs i { background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent); }
+.chip.fc i { background: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 22%, transparent); }
+.chip.bios i { background: var(--orange); box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 22%, transparent); }
+.chip.bad i { background: var(--red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 22%, transparent); }
+.chip span { color: var(--label2); font-weight: 500; }
+.sub { color: var(--label2); font-size: 13px; margin: -10px 0 20px; }
+.sub b { color: var(--label); font-weight: 600; }
+
+.card { background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--sep); border-radius: 20px; min-width: 0;
+  backdrop-filter: blur(20px); }
+.grid { display: grid; grid-template-columns: minmax(380px, 560px) 1fr; gap: 18px; align-items: start; }
+.boardc { position: sticky; top: 20px; padding: 16px 16px 10px; }
+.boardc h2, .grp h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+.boardc .bh { display: flex; align-items: baseline; gap: 10px; padding: 2px 4px 8px; }
+.boardc .bh span { color: var(--label2); font-size: 12.5px; }
+#mb { width: 100%; height: auto; display: block; }
+#mb [data-rotor] { cursor: pointer; }
+/* selected header (hover / focus on its card) */
+#mb .bd-hdr.sel { fill: color-mix(in srgb, var(--accent) 70%, transparent) !important; stroke: var(--accent) !important; stroke-width: 2.5 !important; }
+#mb .bd-lead.sel { stroke: var(--accent) !important; stroke-width: 2.2; }
+#mb .bd-rotor.sel .bd-rring { stroke: var(--accent); stroke-width: 2.4; fill: color-mix(in srgb, var(--accent) 18%, var(--card)); }
+.bnote { color: var(--label3); font-size: 12px; padding: 6px 4px 2px; }
+
+.grp { margin-bottom: 18px; }
+.grp .gh { display: flex; align-items: baseline; gap: 10px; padding: 0 4px 10px; flex-wrap: wrap; }
+.grp .gh span { color: var(--label2); font-size: 12.5px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.fan { padding: 16px 18px 14px; transition: box-shadow .2s, border-color .2s; outline: none; }
+.fan:hover, .fan:focus-visible, .fan.sel { border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+.fan .top { display: flex; align-items: flex-start; gap: 10px; }
+.fan .nm { flex: 1; min-width: 0; }
+.fan .nm b { display: block; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.fan .nm span { color: var(--label2); font-size: 12.5px; }
+.who { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  background: var(--fill); color: var(--label2); }
+.who.pcs { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.who.fc { background: color-mix(in srgb, var(--blue) 16%, transparent); color: var(--blue); }
+.who.bios { background: color-mix(in srgb, var(--orange) 16%, transparent); color: var(--orange); }
+.nums { display: flex; gap: 26px; margin: 12px 0 6px; align-items: baseline; }
+.nums div { min-width: 0; }
+.nums b { font-size: 30px; font-weight: 600; letter-spacing: -.04em; line-height: 1; }
+.nums small { font-size: 13px; color: var(--label2); font-weight: 500; margin-left: 3px; }
+.nums .k { display: block; font-size: 11.5px; color: var(--label2); font-weight: 600; margin-top: 4px; }
+.nums .duty b { color: var(--accent); }
+.bar { height: 5px; border-radius: 3px; background: var(--fill); overflow: hidden; margin: 6px 0 10px; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--accent-grad, var(--accent)); transition: width .6s; }
+.why { font-size: 13px; font-weight: 600; display: flex; gap: 7px; align-items: baseline; }
+.why::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; transform: translateY(-1px); }
+.why.idle::before { background: var(--label3); }
+.parts { color: var(--label2); font-size: 12px; margin-top: 4px; min-height: 17px; }
+.parts em { font-style: normal; color: var(--label); font-weight: 600; }
+.spark { margin-top: 10px; }
+.spark svg { width: 100%; height: 54px; display: block; overflow: visible; }
+.spark .lg { display: flex; gap: 14px; font-size: 11.5px; color: var(--label3); font-weight: 500; margin-top: 3px; }
+.spark .lg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.spark .lg .r { margin-left: auto; }
+.split { margin-top: 8px; font-size: 11.5px; color: var(--label3); }
+.empty { color: var(--label2); font-size: 13px; padding: 4px; }
+.foot { color: var(--label3); font-size: 12px; margin-top: 8px; padding: 0 4px; }
+
+/* ---- fan control on other PCs (standalone, 2026-11-23) ---- */
+.ctl { padding: 16px 18px; margin-bottom: 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ctl .t { flex: 1; min-width: 220px; }
+.ctl .t b { font-size: 15px; font-weight: 650; display: block; }
+.ctl .t span { color: var(--label2); font-size: 12.5px; }
+.sw { position: relative; width: 46px; height: 26px; flex: none; }
+.sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+.sw i { position: absolute; inset: 0; border-radius: 13px; background: var(--fill); border: 1px solid var(--sep); cursor: pointer; transition: background .2s; }
+.sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--label2); transition: transform .2s, background .2s; }
+.sw input:checked + i { background: var(--accent); }
+.sw input:checked + i::after { transform: translateX(20px); background: #fff; }
+.ed input[type=text], .ed input[type=number], .ed select { background: var(--card2); color: var(--label); border: 1px solid var(--sep); border-radius: 9px;
+  padding: 6px 9px; font: 600 13px var(--font); min-width: 0; }
+.ed input[type=number] { width: 72px; }
+.ed .nmin { font-size: 15px; font-weight: 650; width: 100%; background: transparent; border-color: transparent; padding: 3px 6px; margin-left: -6px; }
+.ed .nmin:hover, .ed .nmin:focus { border-color: var(--sep); background: var(--card2); outline: none; }
+.btn { background: var(--card2); color: var(--label); border: 1px solid var(--sep); border-radius: 999px; padding: 6px 13px; font: 600 12.5px var(--font); cursor: pointer; }
+.btn:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.btn.pri { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.btn.del { color: var(--red); }
+.row2 { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 12.5px; color: var(--label2); }
+.gcard { padding: 16px 18px; }
+.gcard .gt { display: flex; gap: 10px; align-items: center; }
+.gcard .gt .nmin { flex: 1; }
+.gl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; margin-top: 12px; }
+.gl label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--label2); }
+.gl label.wide { grid-column: 1 / -1; }
+.gl select { width: 100%; }
+.live { margin-top: 12px; display: flex; gap: 18px; align-items: baseline; font-size: 12.5px; color: var(--label2); flex-wrap: wrap; }
+.live b { font-size: 22px; color: var(--label); font-weight: 600; letter-spacing: -.03em; }
+.curve { margin-top: 10px; }
+.curve svg { width: 100%; height: 70px; display: block; }
+.warn { color: var(--orange); font-size: 12px; margin-top: 6px; }
+.saved { color: var(--label3); font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+  .boardc { position: static; max-width: 640px; }
+}
+@media (max-width: 720px) {
+  main { padding: 20px 16px 40px; }
+  .head h1 { font-size: 28px; }
+  .cards { grid-template-columns: 1fr; }
+  .nums { gap: 18px; }
+}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell">
+<aside class="rail" data-page="fans"></aside>
+<main>
+  <div class="head">
+    <div><div class="hi" id="hi">Every header and what drives it · read-only</div><h1>Fans</h1></div>
+    <div class="spacer"></div>
+    <div class="chip" id="ctlChip"><i></i>Control: <span id="ctlTxt">…</span></div>
+  </div>
+  <div class="sub" id="ctlSub">Loading…</div>
+
+  <div class="grid">
+    <div class="card boardc">
+      <div class="bh"><h2 id="mbTitle">Motherboard</h2><span>headers light up while they spin</span></div>
+      <svg id="mb" viewBox="0 0 10 10"></svg>
+      <div class="bnote">Click a rotor to jump to its header.</div>
+    </div>
+    <div id="groups"></div>
+  </div>
+  <div class="foot" id="foot"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const num = v => typeof v === "number" && isFinite(v);
+const r0 = v => num(v) ? Math.round(v) : null;
+
+// This PC's headers (CLAUDE.md "P1 and case fans", hwinfo_out.FAN_CH, sensors_src.FANS). ch = NCT6701D control index.
+// Grouping is the recommended one, display only in this step (regrouping comes with the setup wizard, step 2).
+const HDR = [
+  { ch: 1, hw: "CPU", name: "CPU_FAN", nct: "Fan #2", role: "Rear 120 rad · intake", group: "rads", req: "req_rad", split: true },
+  { ch: 2, hw: "Chassis2", name: "CHA_FAN2", nct: "Fan #3", role: "Front 360 rad · intake", group: "rads", req: "req_rad", split: true },
+  { ch: 0, hw: "Chassis1", name: "CHA_FAN1", nct: "Fan #1", role: "Top exhaust", group: "top", req: "req_top", split: true },
+  { ch: 5, hw: "W_PUMP+", name: "W_PUMP+", nct: "Fan #6", role: "P1 · D5 pump", group: "pump", req: "req_p1", pump: true },
+  { ch: 6, hw: "AIO Pump", name: "AIO_PUMP", nct: "Fan #7", role: "PSU fan", group: "psu", req: "req_psu" },
+];
+const GROUPS = [
+  ["rads", "Radiators", "rear 120 + front 360 · one request drives both"],
+  ["top", "Top exhaust", ""],
+  ["pump", "Pump", "P1, the in-case D5"],
+  ["psu", "PSU", "the PSU fan on the AIO_PUMP header"],
+  ["other", "Other headers", "not driven by PCS · their BIOS settings apply"],
+];
+const ROLES = { CPU_FAN: "rear 120 rad", CHA_FAN1: "top exhaust", CHA_FAN2: "front 360 rad", AIO_PUMP: "PSU fan",
+                "W_PUMP+": "P1 · D5 pump" };            // labels on the board drawing, as index.html MB_ROLES
+const PROG = { passive: "Passive", daily: "Daily", oc: "Overclocking", auto: "Auto", bench: "Benchmark", off: "Off", manual: "Manual" };
+const HIST_S = 600;                                  // 10 min at 1 s, in memory only
+const hist = {};                                     // ch -> [[t, duty, rpm], ...]
+
+let FS = null, FS_ok = null, FS_next = 0, ST = null, DET = null, mbDef = null, mbBuilt = false, others = [];
+
+// ---------------------------------------------------------------- board
+(async () => {
+  let id = "";
+  try { id = (await (await fetch("/prefs", { cache: "no-store" })).json()).board; } catch (e) {}
+  if (!id || !PCSBoard.boards[id]) {
+    try { const b = await (await fetch("/board/detect")).json(); id = PCSBoard.match([b.maker, b.product].join(" · ")); } catch (e) {}
+  }
+  mbDef = PCSBoard.boards[id] || PCSBoard.boards["generic-atx"];
+  $("mbTitle").textContent = mbDef.name;
+})();
+function boardName(h) {                              // the name the board drawing uses for this header (generic: its hw key)
+  const bh = mbDef && (mbDef.headers || []).find(x => x.hw === h.hw);
+  return bh ? bh.name : h.hw;
+}
+function select(h, on) {
+  const svg = $("mb"); if (!svg || !h || !h.hw) return;
+  const n = CSS.escape(boardName(h));
+  svg.querySelectorAll(`[data-hdr="${n}"],[data-lead="${n}"],[data-rotor="${n}"]`).forEach(e => e.classList.toggle("sel", on));
+}
+$("mb").addEventListener("click", e => {
+  const ro = e.target.closest("[data-rotor]"); if (!ro) return;
+  const nm = ro.getAttribute("data-rotor");
+  const h = HDR.find(x => boardName(x) === nm || x.hw === nm);
+  const el = h && document.querySelector(`.fan[data-ch="${h.ch}"]`);
+  if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus({ preventScroll: true }); }
+});
+
+// ---------------------------------------------------------------- who drives what
+function readerFresh() { return FS && num(FS.reader_t) && Date.now() / 1000 - FS.reader_t < 10; }   // same PC: page and reader share the clock
+function controller(h) {
+  if (!FS_ok) return { k: "", t: "Unknown" };
+  const F = FS.fans;
+  if (readerFresh() && (!F || (ST && ST.standalone))) return { k: "bios", t: "Not PCS" };   // monitor only: PCS never drives them
+  if (!readerFresh() || !F) return { k: "", t: "Unknown" };
+  const m = String(F.mode || "");
+  if (m.startsWith("blocked")) return { k: "fc", t: "FanControl" };
+  if (m.startsWith("active")) return F.applied && F.applied[h.ch] != null ? { k: "pcs", t: "PCS" } : { k: "bios", t: "BIOS" };
+  if (m.startsWith("stale") || m.startsWith("idle")) return { k: "bios", t: "BIOS" };
+  return { k: "", t: "Unknown" };
+}
+function statusLine() {
+  const chip = $("ctlChip"), set = (k, t, sub) => { chip.className = "chip " + k; $("ctlTxt").textContent = t; $("ctlSub").innerHTML = sub; };
+  const prog = ST ? (PROG[ST.program] || ST.name || ST.program || "–") : null;
+  const progTxt = prog ? ` · program <b>${esc(prog)}</b>` : "";
+  if (FS_ok === false) return set("", "unknown", "The service does not offer <b>/fans/state</b> yet (it needs a restart): duty and controller are " +
+    "unknown, rpm and the dashboard's requests are shown" + progTxt + ".");
+  if (FS_ok == null) return set("", "…", "Loading…");
+  if (!readerFresh()) return set("bad", "unknown", "The sensor reader is not answering" +
+    (num(FS.reader_t) ? ` (last data ${Math.round(Date.now() / 1000 - FS.reader_t)} s ago)` : "") + ". Headers keep their last duty until it restarts." + progTxt);
+  if (!FS.fans || (ST && ST.standalone)) return set("bios", "Watching", "PCS only reads the headers on this PC: speed and duty " +
+    "as the board reports them. Your BIOS or fan software controls every fan.");
+  const F = FS.fans || {}, m = String(F.mode || "");
+  if (m.startsWith("active")) {
+    const n = Object.keys(F.applied || {}).length;
+    return set("pcs", "PCS", `The sensor reader drives <b>${n}</b> header${n === 1 ? "" : "s"} from the dashboard's requests` +
+      (m.includes("instant floor") ? ", with the instant floor on" : "") + progTxt +
+      (num(FS.req_age) ? ` · request ${FS.req_age.toFixed(1)} s old` : "") + ". The other headers run their BIOS curves.");
+  }
+  if (m.startsWith("blocked")) return set("fc", "FanControl", "FanControl is running, so PCS leaves every header to it." + progTxt);
+  if (m.startsWith("stale") || m.startsWith("idle")) return set("bios", "BIOS (PCS not running)",
+    "No fresh requests from the dashboard: every header is back on its BIOS curve." + progTxt);
+  return set("bad", "error", "Fan driver: " + esc(m) + progTxt);
+}
+
+// ---------------------------------------------------------------- why a header is where it is
+function srcText(src) {
+  const F = (FS && FS.fans) || {}, s = ST || {}, d = DET || {};
+  const cw = num(F.fast_pkg_w) ? F.fast_pkg_w : s.cpu_w, gw = s.gpu_w;
+  switch (src) {
+    case "cpu_t": return `CPU ${r0(num(F.fast_pkg_t) ? F.fast_pkg_t : s.cpu_t) ?? "--"} °C`;
+    case "cpu_w": return `CPU ${r0(cw) ?? "--"} W`;
+    case "gpu_hot": return `GPU hot spot ${r0(s.gpu_hot) ?? "--"} °C`;
+    case "gpu_mem": return "GPU memory temperature";
+    case "gpu_w": return `GPU ${r0(gw) ?? "--"} W`;
+    case "load_w": return `CPU + GPU ${num(cw) && num(gw) ? Math.round(cw + gw) : "--"} W`;
+    case "vrm_t": return `VRM ${r0((d.cpu || {}).vrm_t) ?? "--"} °C`;
+    case "water": return `water roof (${r0(Math.max(s.cube ?? -99, s.T1 ?? -99)) ?? "--"} °C)`;
+    case "hot": return "hottest of CPU / GPU";
+    default: return src ? src : "fast rule";
+  }
+}
+function requestWhy(h, reqPct) {
+  const Q = (ST && ST.req) || null, prog = ST ? (PROG[ST.program] || ST.name || "") : "";
+  if (h.pump) {
+    if (Q && num(Q.fast_p1) && num(reqPct) && Q.fast_p1 >= reqPct - 0.5) return `Instant P1 floor: ${Q.fast_p1_why || "load"}`;
+    if (Q && Q.daily && Q.daily.p1_why) return `Daily: ${Q.daily.p1_why}`;
+    return `${prog || "Program"} P1 rule`;
+  }
+  if (h.group === "psu") {
+    const w = ST && num(ST.cpu_w) && num(ST.gpu_w) ? Math.round(ST.cpu_w + ST.gpu_w + 80) : null;
+    return `PSU rule: ≈ ${w ?? "--"} W in use (40 % up to 400 W)`;
+  }
+  if (!Q) return "Request from the dashboard";
+  if (Q.oc_fan_hot === true) return "Overclocking guard: CPU or VRM hot";
+  if (Q.oc_fan_hot === false) return "Overclocking: PC fans held low";
+  const D = Q.daily;
+  if (D) {
+    if (D.flush) return "Daily: case flush";
+    if (h.group === "top" && !(D.rad > 0)) return `Daily: top floor (${D.why || "all cool"})`;
+    if (h.group === "rads" && D.heat > 0) return "Daily: heater (case air into the coolant)";
+    return `Daily: ${D.why || "guards"}`;
+  }
+  return `${prog || "Program"} rule`;
+}
+function explain(h, c) {
+  const F = FS_ok && FS ? FS.fans || {} : {};
+  if (c.k === "fc") return { t: "FanControl's curve" };
+  if (c.k === "bios") {
+    if (ST && ST.standalone) return { t: "Set by your BIOS or fan software", idle: true };
+    if (h.pump && ST && ST.req && ST.req.req_p1 == null) return { t: "BIOS curve (P1 is set in the BIOS)", idle: true };
+    if (!HDR.includes(h)) return { t: "BIOS curve (PCS doesn't drive this header)", idle: true };
+    return { t: "BIOS curve", idle: true };
+  }
+  const req = FS && FS.req && FS.req.duty ? FS.req.duty[h.ch] : null;
+  if (c.k === "pcs") {
+    const fl = F.floor ? F.floor[h.ch] : null;
+    if (num(fl) && fl > (req ?? 0) + 0.5) return { t: "Fast path: " + srcText(F.floor_why) + (h.group === "top" ? " (follows the rads)" : "") };
+    return { t: requestWhy(h, req) };
+  }
+  // unknown controller: still say what the dashboard asks for
+  if (!HDR.includes(h)) return { t: "Not driven by PCS", idle: true };
+  if (h.pump && ST && ST.req && ST.req.req_p1 == null) return { t: "P1 is set in the BIOS", idle: true };
+  return ST && ST.req ? { t: "Dashboard asks: " + requestWhy(h, ST.req[h.req]) } : { t: "–", idle: true };
+}
+
+// ---------------------------------------------------------------- cards
+function cardHTML(h) {
+  return `<div class="card fan" tabindex="0" data-ch="${h.ch}">
+    <div class="top"><div class="nm"><b>${esc(h.name || h.nct)}</b><span>${esc(h.role)}${h.nct ? " · " + esc(h.nct) : ""}</span></div>
+      <div class="who" data-f="who">–</div></div>
+    <div class="nums"><div class="duty"><b data-f="duty">--</b><small>%</small><span class="k">duty</span></div>
+      <div><b data-f="rpm">--</b><small>rpm</small><span class="k" data-f="rpmk">${h.split ? "rpm of the fan with tach" : "speed"}</span></div></div>
+    <div class="bar"><i data-f="bar"></i></div>
+    <div class="why" data-f="why">–</div>
+    <div class="parts" data-f="parts"></div>
+    <div class="spark"><svg data-f="sp" viewBox="0 0 300 54" preserveAspectRatio="none"></svg>
+      <div class="lg"><span><i style="background:var(--accent)"></i>duty</span><span><i style="background:var(--teal)"></i>rpm</span><span class="r" data-f="spr">10 min</span></div></div>
+    ${h.split ? `<div class="split">Can carry several fans on a Y-splitter: rpm is the one fan whose tach is connected.</div>` : ""}
+  </div>`;
+}
+function buildGroups() {
+  const all = HDR.concat(others);
+  $("groups").innerHTML = GROUPS.filter(([k]) => all.some(h => h.group === k)).map(([k, t, s]) =>
+    `<div class="grp"><div class="gh"><h2>${t}</h2><span>${s}</span></div><div class="cards">${all.filter(h => h.group === k).map(cardHTML).join("")}</div></div>`).join("") +
+    `<div class="foot">Groups are the recommended ones; choosing your own comes with header setup.</div>`;
+  all.forEach(h => {
+    const el = document.querySelector(`.fan[data-ch="${h.ch}"]`);
+    el.onmouseenter = el.onfocus = () => { el.classList.add("sel"); select(h, true); };
+    el.onmouseleave = el.onblur = () => { el.classList.remove("sel"); select(h, false); };
+  });
+}
+function spark(svg, arr) {
+  if (!arr || arr.length < 2) { svg.innerHTML = ""; return ""; }
+  const t1 = arr[arr.length - 1][0], t0 = t1 - HIST_S, W = 300, H = 54;
+  const rmax = Math.max(100, ...arr.map(a => a[2] || 0)) * 1.08;
+  const X = t => ((t - t0) / HIST_S * W).toFixed(1);
+  const line = (i, max) => {
+    let d = "", pen = false;
+    for (const a of arr) { if (!num(a[i])) { pen = false; continue; } d += (pen ? "L" : "M") + X(a[0]) + " " + (H - 2 - a[i] / max * (H - 4)).toFixed(1); pen = true; }
+    return d;
+  };
+  svg.innerHTML = `<line x1="0" x2="${W}" y1="${H - 2}" y2="${H - 2}" stroke="var(--sep)"/>` +
+    `<path d="${line(2, rmax)}" fill="none" stroke="var(--teal)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` +
+    `<path d="${line(1, 100)}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+  const rp = arr.map(a => a[2]).filter(num), du = arr.map(a => a[1]).filter(num);
+  const mm = (v, u) => v.length ? `${Math.round(Math.min(...v))}–${Math.round(Math.max(...v))}${u}` : "";
+  return [mm(du, " %"), mm(rp, " rpm")].filter(Boolean).join(" · ") + " · 10 min";
+}
+function monitorMode(s) {        // other PCs (standalone, 2026-11-23): this PC's header map and groups don't apply
+  if (!s.standalone || !HDR.length) return;
+  HDR.length = 0;
+  GROUPS.splice(0, GROUPS.length, ["other", "Fan headers", "PCS only watches them: your BIOS or fan software sets their speed"]);
+  for (const k of Object.keys(ROLES)) delete ROLES[k];
+  others = []; $("groups").innerHTML = "";
+}
+function render() {
+  const now = Date.now() / 1000, hs = (FS_ok && FS && FS.headers) || {}, fanRpm = (DET && DET.fan) || {};
+  // headers the reader reports that PCS doesn't know (Fan #4 / #5 here): shown under "Other headers"
+  const known = new Set(HDR.map(h => String(h.ch)));
+  const extra = Object.keys(hs).filter(k => !known.has(k)).sort((a, b) => a - b);
+  if (extra.join() !== others.map(h => h.ch).join()) {
+    others = extra.map(k => ({ ch: +k, hw: null, name: hs[k].name || "Header " + k, nct: "", role: "header not identified", group: "other" }));
+    buildGroups();
+  }
+  if (!document.querySelector(".fan")) buildGroups();
+  for (const h of HDR.concat(others)) {
+    const el = document.querySelector(`.fan[data-ch="${h.ch}"]`); if (!el) continue;
+    const f = k => el.querySelector(`[data-f="${k}"]`);
+    const hd = hs[String(h.ch)] || {};
+    const duty = num(hd.duty) ? hd.duty : null;
+    const rpm = num(hd.rpm) ? hd.rpm : (h.hw && num(fanRpm[h.hw]) ? fanRpm[h.hw] : null);
+    const c = controller(h), w = explain(h, c);
+    f("who").className = "who " + c.k; f("who").textContent = c.t;
+    f("duty").textContent = duty == null ? "--" : Math.round(duty);
+    f("rpm").textContent = rpm == null ? "--" : Math.round(rpm);
+    f("bar").style.width = (duty == null ? 0 : Math.max(0, Math.min(100, duty))) + "%";
+    f("why").textContent = w.t; f("why").classList.toggle("idle", !!w.idle);
+    // request / floor / applied (PCS), or the dashboard's request when the reader block is not available
+    const F = FS_ok && FS ? FS.fans || {} : {}, R = FS_ok && FS && FS.req ? FS.req.duty || {} : {};
+    let parts = "";
+    if (c.k === "pcs") {
+      const req = R[h.ch], fl = F.floor ? F.floor[h.ch] : null, ap = F.applied ? F.applied[h.ch] : null;
+      parts = [num(req) ? `request <em>${Math.round(req)} %</em>` : null, num(fl) ? `fast floor <em>${Math.round(fl)} %</em>` : null,
+               num(ap) ? `applied <em>${Math.round(ap)} %</em>` : null].filter(Boolean).join(" · ");
+    } else if (ST && ST.req && h.req && num(ST.req[h.req]) && c.k !== "fc") {
+      parts = `dashboard request <em>${Math.round(ST.req[h.req])} %</em>` + (c.k === "bios" ? " (not applied)" : "");
+    }
+    f("parts").innerHTML = parts;
+    // history (only real samples)
+    const a = hist[h.ch] || (hist[h.ch] = []);
+    if (duty != null || rpm != null) { a.push([now, duty, rpm]); while (a.length && a[0][0] < now - HIST_S) a.shift(); }
+    f("spr").textContent = spark(f("sp"), a) || "10 min";
+  }
+  statusLine();
+  // board: rpm per header from the detail tree, filled in from the reader's headers when the tree lacks one
+  if (mbDef) {
+    if (!mbBuilt) { PCSBoard.draw($("mb"), mbDef); mbBuilt = true; }
+    const d = Object.assign({}, DET || {});
+    d.fan = Object.assign({}, d.fan || {});
+    HDR.forEach(h => { const hd = hs[String(h.ch)]; if (d.fan[h.hw] == null && hd && num(hd.rpm)) d.fan[h.hw] = hd.rpm; });
+    PCSBoard.update($("mb"), d, { roles: ROLES });
+    const sel = document.querySelector(".fan.sel");
+    if (sel) select(HDR.find(h => String(h.ch) === sel.dataset.ch), true);   // update() rebuilds nothing, but keep it marked
+  }
+  const src = ST && ST.pc_src ? "Sensors: " + ST.pc_src + ". " : "";
+  $("foot").textContent = src + "Read-only: this page never changes a fan. History is kept in this window only.";
+}
+
+// ---------------------------------------------------------------- fan control on other PCs (standalone, 2026-11-23)
+// The sensor reader (--user-fans) drives the headers from fans.json; this page edits it (POST /fans/config, saved
+// 0.6 s after the last change). Groups follow one sensor: min % up to "quiet until", linear to max % at "full at";
+// rises at once, falls at the relax rate. Names are display only.
+const SRC = [["cpu_t", "CPU temperature", "°C", 45, 80], ["hot", "Hottest of CPU / GPU", "°C", 50, 80], ["gpu_hot", "GPU hot spot", "°C", 55, 85],
+             ["gpu_t", "GPU temperature", "°C", 50, 80], ["gpu_mem", "GPU memory", "°C", 70, 95], ["cpu_w", "CPU power", "W", 40, 150],
+             ["gpu_w", "GPU power", "W", 60, 250], ["load_w", "CPU + GPU power", "W", 120, 450]];
+const RELAX = [[2, "Fast (2 %/s)"], [0.4, "Normal (2 % per 5 s)"], [0.15, "Slow (1 % per 7 s)"]];
+let CFG = null, CFG_t = 0, saveT = 0, edSig = "";
+const isPump = c => /pump/i.test(c.name + " " + (CFG.names[c.id] || ""));
+const fanName = c => (CFG && CFG.names[c.id]) || c.name;
+function srcInfo(src) {
+  const s = SRC.find(x => x[0] === src);
+  if (s) return { name: s[1], u: s[2] };
+  const t = ((FS && FS.temps) || []).find(x => "sensor:" + x.id === src);
+  return { name: t ? `${t.hw} · ${t.name}` : src.replace(/^sensor:/, ""), u: "°C" };
+}
+function defaultCfg(ctrls) {
+  const board = ctrls.filter(c => !c.gpu && !/pump/i.test(c.name));
+  return { enabled: false, names: {}, groups: [{ id: "case", name: "Case fans", headers: board.map(c => c.id), src: "cpu_t", lo: 45, hi: 80, min: 30, max: 100, relax: 0.4 }] };
+}
+function saveSoon(extra) {
+  if (DEMO) return;                                    // demo never writes the real fans.json
+  clearTimeout(saveT);
+  $("svd") && ($("svd").textContent = "saving…");
+  saveT = setTimeout(async () => {
+    try {
+      const r = await fetch("/fans/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({}, CFG, extra || {})) });
+      if (!r.ok) throw new Error(await r.text());
+      $("svd") && ($("svd").textContent = "saved");
+    } catch (e) { $("svd") && ($("svd").textContent = "not saved: " + e.message); }
+  }, extra ? 0 : 600);
+}
+function groupOf(id) { return CFG.groups.find(g => g.headers.includes(id)); }
+function curveSVG(g) {
+  const W = 300, H = 70, span = Math.max(1, g.hi - g.lo), x0 = g.lo - span * .4, x1 = g.hi + span * .4;
+  const X = v => (v - x0) / (x1 - x0) * W, Y = d => H - 4 - d / 100 * (H - 8);
+  const p = `M0 ${Y(g.min)} L${X(g.lo)} ${Y(g.min)} L${X(g.hi)} ${Y(g.max)} L${W} ${Y(g.max)}`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${p}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>` +
+    `<line data-f="now" x1="-10" x2="-10" y1="0" y2="${H}" stroke="var(--orange)" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function buildEditor(U) {
+  const ctrls = U.controls || [];
+  const temps = (FS.temps || []).slice().sort((a, b) => (a.hw + a.name).localeCompare(b.hw + b.name));
+  const srcOpts = g => SRC.map(([k, n]) => `<option value="${k}"${g.src === k ? " selected" : ""}>${n}</option>`).join("") +
+    `<optgroup label="Any temperature sensor">` + temps.map(t => `<option value="sensor:${esc(t.id)}"${g.src === "sensor:" + t.id ? " selected" : ""}>${esc(t.hw)} · ${esc(t.name)}</option>`).join("") + `</optgroup>`;
+  const grpOpts = c => `<option value="">Not controlled (BIOS)</option>` + CFG.groups.map(g => `<option value="${esc(g.id)}"${groupOf(c.id) === g ? " selected" : ""}>${esc(g.name)}</option>`).join("");
+  $("groups").innerHTML = `
+    <div class="card ctl ed"><label class="sw"><input type="checkbox" id="en"${CFG.enabled ? " checked" : ""}><i></i></label>
+      <div class="t"><b>Reflex</b><span id="umode">–</span></div><span class="saved" id="svd"></span></div>
+    <div class="grp"><div class="gh"><h2>Groups</h2><span>each group follows one sensor · up at once, down at the relax rate</span></div>
+      <div class="cards">${CFG.groups.map((g, i) => `
+        <div class="card gcard ed" data-g="${i}">
+          <div class="gt"><input class="nmin" type="text" data-k="name" value="${esc(g.name)}" maxlength="40"><button class="btn del" data-act="delg">Remove</button></div>
+          <div class="gl">
+            <label class="wide">Follows<select data-k="src">${srcOpts(g)}</select></label>
+            <label>Quiet until (${srcInfo(g.src).u})<input type="number" data-k="lo" value="${g.lo}" step="1"></label>
+            <label>Full at (${srcInfo(g.src).u})<input type="number" data-k="hi" value="${g.hi}" step="1"></label>
+            <label>Min %<input type="number" data-k="min" value="${g.min}" min="0" max="100" step="1"></label>
+            <label>Max %<input type="number" data-k="max" value="${g.max}" min="0" max="100" step="1"></label>
+            <label class="wide">Relax<select data-k="relax">${RELAX.map(([v, n]) => `<option value="${v}"${Math.abs(g.relax - v) < 1e-6 ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+          </div>
+          <div class="curve">${curveSVG(g)}</div>
+          <div class="live"><span><b data-f="gv">--</b> ${srcInfo(g.src).u} now</span><span><b data-f="gd">--</b> % duty</span><span>${g.headers.length} header${g.headers.length === 1 ? "" : "s"}</span></div>
+          ${g.headers.some(id => { const c = ctrls.find(x => x.id === id); return c && isPump(c); }) && g.min < 50 ? `<div class="warn">A pump is in this group: keep Min at 50 % or more.</div>` : ""}
+        </div>`).join("")}
+      </div><div class="row2"><button class="btn" data-act="addg">+ Add group</button></div></div>
+    <div class="grp"><div class="gh"><h2>Headers</h2><span>rename them, press Identify to spin one at full speed for 4 s</span></div>
+      <div class="cards">${ctrls.map(c => `
+        <div class="card fan ed" data-id="${esc(c.id)}" tabindex="-1">
+          <div class="top"><div class="nm"><input class="nmin" type="text" data-k="nm" value="${esc(fanName(c))}" maxlength="40"><span>${esc(c.hw)} · ${esc(c.name)}</span></div>
+            <div class="who" data-f="who">–</div></div>
+          <div class="nums"><div class="duty"><b data-f="duty">--</b><small>%</small><span class="k">duty</span></div>
+            <div><b data-f="rpm">--</b><small>rpm</small><span class="k">speed</span></div></div>
+          <div class="bar"><i data-f="bar"></i></div>
+          <div class="row2"><select data-k="grp">${grpOpts(c)}</select><button class="btn" data-act="ident">Identify</button></div>
+          ${isPump(c) ? `<div class="warn">Pump header: never let it stop.</div>` : ""}
+        </div>`).join("")}
+      </div></div>
+    <div class="foot">Fail-safe: when PCS is switched off, a group's sensor stops reporting for 5 s, FanControl runs or the sensor reader stops,
+      every header goes back to its BIOS curve. The settings stay on this PC and work without this window open.</div>`;
+  $("en").onchange = e => { CFG.enabled = e.target.checked; saveSoon(); };
+  $("groups").querySelectorAll(".gcard").forEach(el => {
+    const g = CFG.groups[+el.dataset.g];
+    el.querySelectorAll("[data-k]").forEach(inp => inp.onchange = () => {
+      const k = inp.dataset.k;
+      if (k === "name") g.name = inp.value.trim() || "Group";
+      else if (k === "src") { g.src = inp.value; const s = SRC.find(x => x[0] === g.src); if (s) { g.lo = s[3]; g.hi = s[4]; } edSig = ""; }
+      else g[k] = parseFloat(inp.value);
+      if (g.hi <= g.lo) g.hi = g.lo + 1;
+      g.min = Math.max(0, Math.min(100, g.min)); g.max = Math.max(g.min, Math.min(100, g.max));
+      if (k !== "name" && k !== "src") el.querySelector(".curve").innerHTML = curveSVG(g);
+      if (k === "name") edSig = "";
+      saveSoon();
+    });
+    el.querySelector('[data-act="delg"]').onclick = () => { CFG.groups.splice(+el.dataset.g, 1); edSig = ""; saveSoon(); };
+  });
+  $("groups").querySelector('[data-act="addg"]').onclick = () => {
+    CFG.groups.push({ id: "g" + Date.now().toString(36), name: "Group " + (CFG.groups.length + 1), headers: [], src: "cpu_t", lo: 45, hi: 80, min: 30, max: 100, relax: 0.4 });
+    edSig = ""; saveSoon();
+  };
+  $("groups").querySelectorAll(".fan.ed").forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('[data-k="nm"]').onchange = e => { const v = e.target.value.trim(); if (v) CFG.names[id] = v; else delete CFG.names[id]; saveSoon(); };
+    el.querySelector('[data-k="grp"]').onchange = e => {
+      CFG.groups.forEach(g => g.headers = g.headers.filter(h => h !== id));
+      const g = CFG.groups.find(x => x.id === e.target.value); if (g) g.headers.push(id);
+      edSig = ""; saveSoon();
+    };
+    el.querySelector('[data-act="ident"]').onclick = () => saveSoon({ identify: { id, s: 4 } });
+  });
+}
+function renderEditor() {
+  const U = FS && FS.ufans;
+  if (!U) {                                            // reader without --user-fans (older install): watch only
+    $("ctlSub").innerHTML = FS && FS.admin === false ? "The sensor reader runs without administrator rights: fans can't be read or set."
+      : "Reflex needs the PCS installer 0.5 or newer (the sensor reader starts without it). Watching only.";
+    return false;
+  }
+  const ctrls = U.controls || [];
+  $("hi").textContent = "Name your fans, group them and pick what they follow";
+  if (!CFG) return true;
+  if (!CFG.groups) Object.assign(CFG, defaultCfg(ctrls));
+  CFG.names = CFG.names || {};
+  const sig = JSON.stringify([ctrls.map(c => c.id), CFG.groups.map(g => [g.id, g.name, g.src, g.headers]), (FS.temps || []).length]);
+  if (sig !== edSig) { edSig = sig; buildEditor(U); }
+  const m = String(U.mode || "");
+  const chip = $("ctlChip");
+  chip.className = "chip " + (m.startsWith("active") ? "pcs" : m.startsWith("blocked") ? "fc" : m.includes("error") ? "bad" : "bios");
+  $("ctlTxt").textContent = m.startsWith("active") ? "PCS" : m.startsWith("blocked") ? "FanControl" : "BIOS";
+  $("ctlSub").innerHTML = "Set the groups and headers below. " + (U.config_error ? "Config error: " + esc(U.config_error) : "");
+  $("umode") && ($("umode").textContent = m.startsWith("active") ? "On: your groups react 4x a second"
+    : m.startsWith("blocked") ? "Paused: FanControl is running" : "Off: every fan runs its BIOS curve");
+  const gs = Object.fromEntries((U.groups || []).map(g => [g.id, g]));
+  document.querySelectorAll(".gcard").forEach(el => {
+    const g = CFG.groups[+el.dataset.g], L = g && gs[g.id];
+    if (!g) return;
+    const v = L && num(L.value) ? L.value : null, d = L && num(L.duty) ? L.duty : null;
+    el.querySelector('[data-f="gv"]').textContent = v == null ? "--" : v.toFixed(srcInfo(g.src).u === "W" ? 0 : 1);
+    el.querySelector('[data-f="gd"]').textContent = d == null ? "--" : Math.round(d);
+    const ln = el.querySelector('[data-f="now"]'), span = Math.max(1, g.hi - g.lo), x0 = g.lo - span * .4, x1 = g.hi + span * .4;
+    if (ln) { const x = v == null ? -10 : (v - x0) / (x1 - x0) * 300; ln.setAttribute("x1", x); ln.setAttribute("x2", x); }
+  });
+  for (const c of ctrls) {
+    const el = document.querySelector(`.fan.ed[data-id="${CSS.escape(c.id)}"]`); if (!el) continue;
+    const f = k => el.querySelector(`[data-f="${k}"]`);
+    const on = num(c.applied);
+    f("who").className = "who " + (on ? "pcs" : m.startsWith("blocked") ? "fc" : "bios");
+    f("who").textContent = on ? (c.by === "identify" ? "IDENTIFY" : "PCS") : m.startsWith("blocked") ? "FanControl" : "BIOS";
+    f("duty").textContent = num(c.duty) ? Math.round(c.duty) : "--";
+    f("rpm").textContent = num(c.rpm) ? Math.round(c.rpm) : "--";
+    f("bar").style.width = (num(c.duty) ? Math.max(0, Math.min(100, c.duty)) : 0) + "%";
+  }
+  $("foot").textContent = ST && ST.pc_src ? "Sensors: " + ST.pc_src + "." : "";
+  return true;
+}
+
+// ---------------------------------------------------------------- polling (1 s)
+async function getJSON(u) {
+  const r = await fetch(u, { cache: "no-store" }); if (!r.ok) { const e = new Error(r.status); e.status = r.status; throw e; }
+  const d = await r.json();
+  return DEMO ? demoData(u, d) : d;
+}
+// ?demo (2026-11-23, README screenshots): a Reflex setup with made-up headers on top of the live sensors; saves nothing
+const DEMO = new URLSearchParams(location.search).has("demo");
+function demoData(u, d) {
+  if (u === "/status") return Object.assign(d, { standalone: true });
+  if (u === "/fans/config") return { enabled: true, names: { c0: "Front intake", c1: "Radiator top", c2: "Rear exhaust", c3: "Pump", g1: "GPU fans" },
+    groups: [{ id: "case", name: "Case fans", headers: ["c0", "c2"], src: "cpu_t", lo: 45, hi: 80, min: 30, max: 100, relax: 0.4 },
+             { id: "rad", name: "Radiator", headers: ["c1"], src: "hot", lo: 50, hi: 80, min: 35, max: 100, relax: 0.4 },
+             { id: "pump", name: "Pump", headers: ["c3"], src: "load_w", lo: 120, hi: 400, min: 60, max: 100, relax: 0.15 }] };
+  if (u === "/fans/state") {
+    const t = Math.sin(Date.now() / 9000), cpu = 58 + 6 * t;
+    const duty = g => g === "case" ? 30 + 70 * Math.max(0, (cpu - 45) / 35) : g === "rad" ? 35 + 65 * Math.max(0, (cpu - 50) / 30) : 66;
+    d.ufans = { mode: "active", cpu_t: cpu, controls: [
+      { id: "c0", hw: "Nuvoton NCT6799D", name: "Fan #1", duty: duty("case"), rpm: 18 * duty("case") + 300, applied: duty("case"), by: "Case fans" },
+      { id: "c1", hw: "Nuvoton NCT6799D", name: "Fan #2", duty: duty("rad"), rpm: 22 * duty("rad") + 350, applied: duty("rad"), by: "Radiator" },
+      { id: "c2", hw: "Nuvoton NCT6799D", name: "Fan #3", duty: duty("case"), rpm: 16 * duty("case") + 280, applied: duty("case"), by: "Case fans" },
+      { id: "c3", hw: "Nuvoton NCT6799D", name: "Pump Fan", duty: 66, rpm: 3180, applied: 66, by: "Pump" },
+      { id: "g1", hw: "NVIDIA GeForce RTX 4070", name: "GPU Fan", duty: 34, rpm: 1180, gpu: true }],
+      groups: [{ id: "case", duty: duty("case"), value: cpu }, { id: "rad", duty: duty("rad"), value: cpu + 2 }, { id: "pump", duty: 66, value: 238 }] };
+    d.temps = d.temps || [];
+  }
+  return d;
+}
+async function tick() {
+  const jobs = [getJSON("/status").then(async s => {
+                  ST = s; monitorMode(s); window.pcsLive && pcsLive(s.standalone ? !!DET : s.connected);
+                  if (s.standalone && !CFG && Date.now() - CFG_t > 5000) {      // Reflex config right away (first poll)
+                    CFG_t = Date.now();
+                    try { CFG = (await getJSON("/fans/config")) || {}; } catch (e) {}
+                  }
+                }).catch(() => { ST = null; }),
+                getJSON("/pcdetail").then(d => { DET = d; }).catch(() => {})];
+  const now = Date.now();
+  if (FS_ok !== false || now >= FS_next)             // no endpoint yet (service not restarted): ask again every 30 s
+    jobs.push(getJSON("/fans/state").then(d => { FS = d; FS_ok = true; })
+      .catch(e => { if (e.status === 404 || FS_ok !== true) { FS_ok = false; FS = null; FS_next = now + 30000; } }));
+  await Promise.all(jobs);
+  try {
+    if (ST && ST.standalone && renderEditor()) {      // other PCs: editor (the board drawing stays on the left)
+      if (mbDef) { if (!mbBuilt) { PCSBoard.draw($("mb"), mbDef); mbBuilt = true; } PCSBoard.update($("mb"), DET || {}, { roles: {} }); }
+      return;
+    }
+    render();
+  } catch (e) { console.error(e); }
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

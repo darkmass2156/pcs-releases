@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<title>PCS Analyzer</title>
+<style>
+:root {
+  --bg: #F2F2F7; --card: #FFFFFF; --card2: #F2F2F7; --label: #000000; --label2: rgba(60,60,67,.60);
+  --label3: rgba(60,60,67,.30); --sep: rgba(60,60,67,.12); --fill: rgba(120,120,128,.12); --bar: rgba(242,242,247,.72);
+  --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --teal: #30B0C7; --purple: #AF52DE;
+  --indigo: #5856D6; --gray: #8E8E93; --yellow: #FFCC00; --pink: #FF2D55;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E; --label: #FFFFFF; --label2: rgba(235,235,245,.60);
+    --label3: rgba(235,235,245,.30); --sep: rgba(84,84,88,.45); --fill: rgba(120,120,128,.24); --bar: rgba(0,0,0,.72);
+    --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --teal: #40CBE0; --purple: #BF5AF2;
+    --indigo: #5E5CE6; --gray: #8E8E93; --yellow: #FFD60A; --pink: #FF375F; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E; --label: #FFFFFF; --label2: rgba(235,235,245,.60);
+  --label3: rgba(235,235,245,.30); --sep: rgba(84,84,88,.45); --fill: rgba(120,120,128,.24); --bar: rgba(0,0,0,.72);
+  --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --teal: #40CBE0; --purple: #BF5AF2;
+  --indigo: #5E5CE6; --gray: #8E8E93; --yellow: #FFD60A; --pink: #FF375F; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font-family: var(--font);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "tnum"; }
+.wrap { max-width: 1500px; margin: 0 auto; padding: 0 clamp(16px, 2vw, 40px) 48px; }
+.topbar { position: sticky; top: 0; z-index: 10; background: var(--bar);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: .5px solid var(--sep); }
+.topbar .wrap { display: flex; align-items: center; gap: 16px; padding-top: 10px; padding-bottom: 10px; max-width: none; }
+.brand { font-weight: 600; font-size: 15px; }
+.tabs { display: inline-flex; background: var(--fill); border-radius: 9px; padding: 2px; }
+.tabs a { color: var(--label); text-decoration: none; font: 500 13px var(--font); padding: 5px 14px; border-radius: 7px; }
+.tabs a.on { background: var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.12); font-weight: 600; }
+.spacer { flex: 1; }
+.iconbtn { border: 0; background: var(--fill); color: var(--label); width: 30px; height: 30px; border-radius: 15px;
+  cursor: pointer; font-size: 14px; display: grid; place-items: center; }
+
+.hero { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; padding: 28px 0 20px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .04em; }
+h1 { font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -.025em; margin: 4px 0 0; }
+.hsub { font-size: 15px; color: var(--label2); margin-top: 6px; max-width: 640px; }
+
+.card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 18px 20px; }
+.card h2 { font-size: 13px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .04em;
+  margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
+.card h2 .r { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.grid { display: grid; gap: 16px; }
+.mt { margin-top: 16px; }
+
+/* recorder */
+.rec { margin-left: auto; display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 16px;
+  padding: 12px 16px; box-shadow: var(--shadow); min-width: 300px; }
+.rec .t { font-weight: 600; font-size: 15px; }
+.rec .s { font-size: 12px; color: var(--label2); margin-top: 2px; }
+.pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--gray); flex: none; }
+.pulse.on { background: var(--red); animation: pl 1.6s infinite; }
+@keyframes pl { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 50%, transparent); }
+  70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.switch { position: relative; width: 51px; height: 31px; flex: none; margin-left: auto; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position: absolute; inset: 0; background: var(--fill); border-radius: 16px; cursor: pointer; transition: .2s; }
+.switch span::before { content: ""; position: absolute; width: 27px; height: 27px; left: 2px; top: 2px; background: #fff;
+  border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 3px 1px rgba(0,0,0,.06); transition: .2s; }
+.switch input:checked + span { background: var(--green); }
+.switch input:checked + span::before { transform: translateX(20px); }
+
+/* tiles */
+.tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tile .k { font-size: 13px; color: var(--label2); font-weight: 500; display: flex; align-items: center; gap: 7px; }
+.tile .v { font-size: 34px; font-weight: 700; letter-spacing: -.02em; margin-top: 6px; }
+.tile .h { font-size: 12px; color: var(--label2); margin-top: 2px; }
+.sw { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.k-crash { background: var(--red); } .k-reset { background: var(--purple); } .k-silent { background: var(--orange); } .k-gpu { background: var(--green); }
+
+/* core map */
+.two { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.die { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cell { border-radius: 10px; padding: 8px 9px; background: var(--card2); cursor: pointer; border: 2px solid transparent;
+  min-height: 62px; display: flex; flex-direction: column; justify-content: space-between; }
+.cell.sel { border-color: var(--blue); }
+.cell .n { font-size: 12px; font-weight: 600; }
+.cell .sub { font-size: 11px; color: var(--label2); }
+.cell .bd { display: flex; gap: 4px; flex-wrap: wrap; }
+.bd span { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; color: #fff; }
+.bd .c { background: var(--red); } .bd .s { background: var(--orange); }
+.ecl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 4px; }
+.ecl i { height: 10px; border-radius: 3px; background: var(--fill); }
+.ecl i.s { background: var(--orange); } .ecl i.c { background: var(--red); }
+.legend { font-size: 12px; color: var(--label2); margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* timeline */
+.tl { position: relative; height: 92px; margin: 6px 4px 0; }
+.tl .axis { position: absolute; left: 0; right: 0; top: 38px; height: 2px; background: var(--sep); border-radius: 1px; }
+.tl .dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; transform: translate(-7px, -7px);
+  cursor: pointer; border: 2px solid var(--card); }
+.tl .dot.cur { width: 20px; height: 20px; transform: translate(-10px, -10px); box-shadow: 0 0 0 3px var(--blue); }
+.tl .lab { position: absolute; top: 74px; font-size: 11px; color: var(--label2); transform: translateX(-50%); white-space: nowrap; }
+
+/* incident */
+.nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.btn { border: 0; background: var(--fill); color: var(--label); height: 32px; padding: 0 14px; border-radius: 16px;
+  font: 600 13px var(--font); cursor: pointer; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.blue { background: var(--blue); color: #fff; }
+.seg { display: inline-flex; background: var(--fill); border-radius: 9px; padding: 2px; }
+.seg button { border: 0; background: transparent; color: var(--label); font: 500 12px var(--font); padding: 5px 12px;
+  border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.12); font-weight: 600; }
+.pos { font-size: 13px; color: var(--label2); min-width: 70px; text-align: center; }
+.ititle { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 10px; color: #fff; letter-spacing: .02em; }
+.pill.crash { background: var(--red); } .pill.reset { background: var(--purple); } .pill.silent, .pill.whea { background: var(--orange); } .pill.gpu { background: var(--green); }
+.iname { font-size: 26px; font-weight: 700; letter-spacing: -.02em; word-break: break-word; }
+.icode { font-family: var(--mono); font-size: 14px; color: var(--label2); }
+.imeta { font-size: 14px; color: var(--label2); margin-top: 6px; }
+.imeta b { color: var(--label); font-weight: 600; }
+.plain { font-size: 15px; line-height: 1.5; margin: 14px 0 4px; max-width: 900px; }
+.find { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+.find li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; background: var(--card2);
+  border-radius: 12px; padding: 10px 12px; }
+.find li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex: none; background: var(--gray); }
+.find li.bad::before { background: var(--red); } .find li.warn::before { background: var(--orange); }
+.find li.ok::before { background: var(--green); } .find li.info::before { background: var(--blue); }
+
+.procs { display: grid; gap: 6px; }
+.prow { display: grid; grid-template-columns: minmax(110px, 220px) 1fr 130px; align-items: center; gap: 10px; font-size: 13px; }
+.pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pbar { position: relative; height: 10px; border-radius: 5px; background: var(--fill); }
+.pbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--blue, #0a84ff); }
+.pbar b { position: absolute; top: -3px; width: 2px; height: 16px; margin-left: -1px; background: var(--label2); }
+.prow.hog .pbar i { background: var(--orange, #ff9f0a); }
+.prow.hog .pname { font-weight: 600; }
+.pval { text-align: right; font-variant-numeric: tabular-nums; }
+.pval small { color: var(--label2); }
+@media (max-width: 600px) { .prow { grid-template-columns: 1fr 90px; } .pbar { grid-column: 1 / -1; order: 3; } }
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.fact { background: var(--card2); border-radius: 12px; padding: 10px 12px; }
+.fact .k { font-size: 11px; color: var(--label2); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.fact .v { font-size: 19px; font-weight: 650; margin-top: 3px; }
+.fact .v small { font-size: 12px; color: var(--label2); font-weight: 500; }
+.fact.hi { background: color-mix(in srgb, var(--blue) 14%, var(--card2)); }
+.fact.hot { background: color-mix(in srgb, var(--red) 16%, var(--card2)); }
+
+.charts { display: grid; gap: 4px; }
+.chart { position: relative; }
+.chart .cap { font-size: 12px; color: var(--label2); font-weight: 600; display: flex; gap: 12px; align-items: center; }
+.chart .cap i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.chart svg { width: 100%; height: 96px; display: block; overflow: visible; }
+.hover { position: absolute; pointer-events: none; background: var(--card); box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  border-radius: 10px; padding: 8px 10px; font-size: 12px; display: none; z-index: 5; white-space: nowrap; }
+
+.cores { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.core { background: var(--card2); border-radius: 10px; padding: 8px 10px; font-size: 12px; line-height: 1.45; }
+.core b { font-size: 12px; }
+.core .clk { font-size: 16px; font-weight: 650; }
+.core.p { border-left: 3px solid var(--indigo); } .core.e { border-left: 3px solid var(--teal); }
+.core.me { outline: 2px solid var(--red); }
+.core .bar { height: 4px; border-radius: 2px; background: var(--fill); margin-top: 4px; overflow: hidden; }
+.core .bar i { display: block; height: 100%; background: var(--blue); }
+.mono { font-family: var(--mono); font-size: 12px; }
+.empty { text-align: center; padding: 40px 10px; color: var(--label2); font-size: 15px; }
+.empty b { display: block; font-size: 22px; color: var(--label); margin-bottom: 6px; }
+.dump { font-size: 13px; color: var(--label2); line-height: 1.5; }
+.dump code { font-family: var(--mono); background: var(--card2); padding: 2px 6px; border-radius: 6px; color: var(--label); }
+.list { max-height: 360px; overflow: auto; }
+.list table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.list td { padding: 7px 6px; border-top: .5px solid var(--sep); }
+.list tr { cursor: pointer; } .list tr.cur td { background: color-mix(in srgb, var(--blue) 12%, transparent); }
+.list tr:hover td { background: var(--fill); }
+@media (max-width: 1000px) { .two { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { h1 { font-size: 30px; } .rec { margin-left: 0; width: 100%; min-width: 0; } .iname { font-size: 21px; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell an">
+<aside class="rail" data-page="analyzer"></aside>
+<div class="topbar"><div class="wrap">
+  <div class="brand">PCS</div>
+  <nav class="pnav" data-page="analyzer"></nav>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="theme" title="Appearance">◐</button>
+</div></div>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Stability</div>
+      <h1>Crash analyzer</h1>
+      <div class="hsub">Every blue screen, hard reset, silent cache error and GPU driver reset, with what each core was doing when it happened.</div>
+    </div>
+    <div class="rec">
+      <span class="pulse" id="pulse"></span>
+      <div><div class="t" id="recT">Flight recorder</div><div class="s" id="recS">…</div></div>
+      <label class="switch" title="Record every core once a second. Stays on across reboots and crashes until you turn it off.">
+        <input type="checkbox" id="recSw"><span></span></label>
+    </div>
+  </div>
+
+  <div class="grid tiles">
+    <div class="card tile"><div class="k"><span class="sw k-crash"></span>Blue screens</div><div class="v" id="nCrash">–</div><div class="h">Windows crashed with an error code</div></div>
+    <div class="card tile"><div class="k"><span class="sw k-reset"></span>Hard resets</div><div class="v" id="nReset">–</div><div class="h">Froze or lost power, no error code</div></div>
+    <div class="card tile"><div class="k"><span class="sw k-silent"></span>Silent faults</div><div class="v" id="nSilent">–</div><div class="h">Cache errors the CPU fixed by itself</div></div>
+    <div class="card tile"><div class="k"><span class="sw k-gpu"></span>GPU driver</div><div class="v" id="nGpu">–</div><div class="h">NVIDIA errors and resets</div></div>
+    <div class="card tile"><div class="k">Clean for</div><div class="v" id="clean">–</div><div class="h" id="cleanH">since the last incident</div></div>
+  </div>
+
+  <div class="grid two mt">
+    <div class="card">
+      <h2>Where it fails <span class="r"><button class="btn" id="allCores" style="height:26px;font-size:12px">All cores</button></span></h2>
+      <div class="die" id="die"></div>
+      <div class="legend"><span><span class="sw k-crash"></span> blue screens / hangs</span><span><span class="sw k-silent"></span> silent faults</span><span><span class="sw k-gpu"></span> GPU driver (not tied to a core)</span><span>Click a core to see only its incidents</span></div>
+    </div>
+    <div class="card">
+      <h2>Timeline <span class="r" id="tlRange" style="color:var(--label2)"></span></h2>
+      <div class="tl" id="tl"><div class="axis"></div></div>
+      <div class="list" id="list"></div>
+    </div>
+  </div>
+
+  <div class="card mt" id="viewer">
+    <div class="nav">
+      <button class="btn" id="older">‹ Older</button>
+      <span class="pos" id="pos">–</span>
+      <button class="btn" id="newer">Newer ›</button>
+      <button class="btn blue" id="latest">Latest</button>
+      <span class="spacer"></span>
+      <div class="seg" id="filt"><button data-f="all" class="on">All</button><button data-f="crash">Blue screens</button><button data-f="reset">Hard resets</button><button data-f="silent">Silent faults</button><button data-f="gpu">GPU</button></div>
+    </div>
+    <div id="inc"><div class="empty"><b>Loading…</b></div></div>
+  </div>
+</div>
+<div class="hover" id="hov"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let theme = "auto";
+try { theme = localStorage.getItem("pcs-theme") || "auto"; } catch (e) {}
+const applyTheme = () => { if (window.pcsTheme) pcsTheme.set(theme); };
+applyTheme();
+$("theme").onclick = () => { const t = ["auto", "light", "dark"]; theme = t[(t.indexOf(theme) + 1) % 3];
+  try { localStorage.setItem("pcs-theme", theme); } catch (e) {} applyTheme(); };
+
+const P = [0, 1, 10, 11, 12, 13, 22, 23], CL = {1: [2,3,4,5], 2: [6,7,8,9], 3: [14,15,16,17], 4: [18,19,20,21]};
+const KIND = { crash: "Blue screen", reset: "Hard reset", silent: "Silent fault", whea: "Hardware error", gpu: "GPU driver" };
+const COL = { crash: "var(--red)", reset: "var(--purple)", silent: "var(--orange)", whea: "var(--orange)", gpu: "var(--green)" };
+let S = null, list = [], cur = null, filt = "all", coreSel = null, follow = true;
+const cache = {};
+
+const num = (x, d = 0) => x == null || isNaN(x) ? "–" : Number(x).toFixed(d);
+const ghz = m => m == null ? "–" : (m / 1000).toFixed(2);
+const pdate = s => new Date(s.replace(" ", "T"));
+const ago = ms => { const s = Math.max(0, ms / 1000); if (s < 90) return Math.round(s) + " s";
+  if (s < 5400) return Math.round(s / 60) + " min"; if (s < 172800) return (s / 3600).toFixed(1) + " h"; return (s / 86400).toFixed(1) + " days"; };
+const when = s => pdate(s).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const coreName = c => c == null ? "unknown core" : P.includes(c) ? "P-core " + c :
+  "E-core " + c + " · cluster " + Object.keys(CL).find(k => CL[k].includes(c));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+
+async function load() {
+  try {
+    const r = await fetch("/analyzer/state"); S = await r.json();
+  } catch (e) { $("recS").textContent = "Dashboard not reachable"; return; }
+  render();
+}
+
+function filtered() {
+  return S.incidents.filter(i => (filt === "all" || i.kind === filt || (filt === "silent" && i.kind === "whea")) &&
+    (coreSel == null || (coreSel.startsWith("cl") ? CL[coreSel.slice(2)].includes(i.core) : String(i.core) === coreSel)));
+}
+
+function render() {
+  // recorder
+  $("recSw").checked = !!S.enabled;
+  $("pulse").className = "pulse" + (S.enabled ? " on" : "");
+  $("recT").textContent = S.enabled ? "Recording" : "Recorder off";
+  const fresh = S.last_sample && Date.now() / 1000 - S.last_sample < 5;
+  $("recS").textContent = S.enabled
+    ? (fresh ? "Every core, once a second" : "Waiting for HWiNFO data…") + (S.since ? " · since " + when(S.since) : "") + " · " + S.flight_mb + " MB kept"
+    : "Turn on to record every core once a second. Incidents are still detected, with basic data.";
+  // tiles
+  $("nCrash").textContent = S.counts.crash; $("nReset").textContent = S.counts.reset; $("nSilent").textContent = S.counts.silent; $("nGpu").textContent = S.counts.gpu || 0;
+  const last = S.incidents[S.incidents.length - 1];
+  $("clean").textContent = last ? ago(Date.now() - pdate(last.time)) : "∞";
+  $("cleanH").textContent = last ? "since " + KIND[last.kind].toLowerCase() + ", " + when(last.time) : "no incidents logged";
+  drawDie();
+  list = filtered();
+  if (follow || !list.find(i => i.id === cur)) cur = list.length ? list[list.length - 1].id : null;
+  drawTimeline(); drawList(); show(cur);
+}
+
+function cnt(c) { return S.per_core[String(c)] || { crash: 0, silent: 0, reset: 0 }; }
+function drawDie() {
+  const max = Math.max(1, ...Object.values(S.per_core).map(k => k.crash + k.silent));
+  const shade = n => n ? `color-mix(in srgb, var(--red) ${15 + 50 * n / max}%, var(--card2))` : "";
+  const badges = k => (k.crash ? `<span class="c">${k.crash}</span>` : "") + (k.silent ? `<span class="s">${k.silent}</span>` : "");
+  let h = "";
+  // Intel floorplan feel: P P | E-cluster | P P rows
+  const order = [["p", 0], ["p", 1], ["e", 1], ["p", 10], ["p", 11], ["e", 2], ["p", 12], ["p", 13], ["e", 3], ["p", 22], ["p", 23], ["e", 4]];
+  for (const [t, x] of order) {
+    if (t === "p") {
+      const k = cnt(x);
+      h += `<div class="cell${coreSel === String(x) ? " sel" : ""}" data-c="${x}" style="background:${shade(k.crash + k.silent) || "var(--card2)"}">
+        <div class="n">P${x}</div><div class="bd">${badges(k)}</div><div class="sub">P-core</div></div>`;
+    } else {
+      const cs = CL[x], tot = cs.reduce((a, c) => ({ crash: a.crash + cnt(c).crash, silent: a.silent + cnt(c).silent }), { crash: 0, silent: 0 });
+      h += `<div class="cell${coreSel === "cl" + x ? " sel" : ""}" data-c="cl${x}" style="background:${shade(tot.crash + tot.silent) || "var(--card2)"}">
+        <div class="n">E cluster ${x}</div><div class="bd">${badges(tot)}</div>
+        <div class="ecl">${cs.map(c => `<i class="${cnt(c).crash ? "c" : cnt(c).silent ? "s" : ""}" title="E-core ${c}: ${cnt(c).crash} crash, ${cnt(c).silent} silent"></i>`).join("")}</div></div>`;
+    }
+  }
+  $("die").innerHTML = h;
+  $("die").querySelectorAll(".cell").forEach(el => el.onclick = () => {
+    coreSel = coreSel === el.dataset.c ? null : el.dataset.c; follow = true; render(); });
+}
+$("allCores").onclick = () => { coreSel = null; follow = true; render(); };
+
+function drawTimeline() {
+  const tl = $("tl"); tl.querySelectorAll(".dot,.lab").forEach(e => e.remove());
+  if (!list.length) { $("tlRange").textContent = ""; return; }
+  const t0 = pdate(list[0].time).getTime(), t1 = Math.max(Date.now(), t0 + 3600e3);
+  $("tlRange").textContent = when(list[0].time).split(",")[0] + " → now";
+  const x = t => 1 + 98 * (t - t0) / (t1 - t0);
+  const days = new Set();
+  // label every Nth day so labels never collide (~70 px each)
+  const nDays = Math.max(1, (t1 - t0) / 864e5), every = Math.max(1, Math.ceil(nDays / Math.max(1, tl.clientWidth / 70)));
+  let k = 0;
+  for (let d = new Date(t0); d.getTime() <= t1; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+    const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    if (m >= t0 && !days.has(m) && (k++ % every === 0)) { days.add(m);
+      const l = document.createElement("div"); l.className = "lab"; l.style.left = x(m) + "%";
+      l.textContent = new Date(m).toLocaleDateString([], { weekday: "short", day: "numeric" }); tl.appendChild(l); }
+  }
+  const rows = { crash: 14, reset: 30, silent: 46, whea: 46, gpu: 62 };
+  for (const i of list) {
+    const d = document.createElement("div"); d.className = "dot" + (i.id === cur ? " cur" : "");
+    d.style.left = x(pdate(i.time).getTime()) + "%"; d.style.top = rows[i.kind] + "px"; d.style.background = COL[i.kind];
+    d.title = `${KIND[i.kind]} · ${i.name} · ${when(i.time)}${i.core != null ? " · " + coreName(i.core) : ""}`;
+    d.onclick = () => { cur = i.id; follow = list[list.length - 1].id === cur; drawTimeline(); drawList(); show(cur); };
+    tl.appendChild(d);
+  }
+}
+
+function drawList() {
+  const rows = [...list].reverse().map(i => `<tr data-id="${i.id}" class="${i.id === cur ? "cur" : ""}">
+    <td><span class="sw" style="background:${COL[i.kind]}"></span></td><td>${when(i.time)}</td>
+    <td><b>${esc(i.name)}</b></td><td style="color:var(--label2)">${i.core != null ? coreName(i.core) : ""}</td></tr>`).join("");
+  $("list").innerHTML = rows ? `<table>${rows}</table>` : `<div class="empty" style="padding:20px">Nothing here.</div>`;
+  $("list").querySelectorAll("tr").forEach(tr => tr.onclick = () => { cur = tr.dataset.id;
+    follow = list[list.length - 1].id === cur; drawTimeline(); drawList(); show(cur); });
+}
+
+function nav() {
+  const idx = list.findIndex(i => i.id === cur);
+  $("pos").textContent = list.length ? `${idx + 1} of ${list.length}` : "–";
+  $("older").disabled = idx <= 0; $("newer").disabled = idx < 0 || idx >= list.length - 1;
+  $("latest").disabled = !list.length || idx === list.length - 1;
+}
+const go = d => { const idx = list.findIndex(i => i.id === cur); const n = list[idx + d]; if (!n) return;
+  cur = n.id; follow = idx + d === list.length - 1; drawTimeline(); drawList(); show(cur); };
+$("older").onclick = () => go(-1); $("newer").onclick = () => go(1);
+$("latest").onclick = () => { follow = true; cur = list.length ? list[list.length - 1].id : null; drawTimeline(); drawList(); show(cur); };
+document.addEventListener("keydown", e => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
+$("filt").querySelectorAll("button").forEach(b => b.onclick = () => {
+  filt = b.dataset.f; $("filt").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); follow = true; render(); });
+
+$("recSw").onchange = async e => {
+  const on = e.target.checked;
+  try { const r = await fetch("/analyzer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on }) });
+        S = await r.json(); render(); } catch (err) { e.target.checked = !on; }
+};
+
+async function show(id) {
+  nav();
+  const box = $("inc");
+  if (!id) { box.innerHTML = `<div class="empty"><b>Nothing to show</b>${S && S.incidents.length ? "No incidents match this filter." : "No crashes, resets or silent faults logged. Long may it last."}</div>`; return; }
+  let d = cache[id];
+  if (!d) {
+    box.style.opacity = .5;
+    try { d = await (await fetch("/analyzer/incident?id=" + id)).json(); } catch (e) { d = null; }
+    box.style.opacity = 1;
+    if (!d) { box.innerHTML = `<div class="empty"><b>Could not load this incident</b></div>`; return; }
+    cache[id] = d;
+  }
+  if (id !== cur) return;
+  const g = (d.at && d.at.g) || {}, me = d.shown_core, c = d.cores && me != null ? d.cores[me] : null;
+  const fact = (k, v, u = "", cls = "") => `<div class="fact ${cls}"><div class="k">${k}</div><div class="v">${v}${u ? ` <small>${u}</small>` : ""}</div></div>`;
+  const facts = [];
+  if (c) {
+    facts.push(fact(d.core != null ? "Core" : "Busiest core", (P.includes(me) ? "P" : "E") + me, "", "hi"));
+    facts.push(fact("Ratio", c.clk ? Math.round(c.clk / 100) + "x" : "–", c.clk ? ghz(c.clk) + " GHz" : ""));
+    facts.push(fact("Effective clock", ghz(c.eclk), "GHz"));
+    facts.push(fact("Core voltage", num(c.v, 3), "V"));
+    facts.push(fact("Core load", num(c.use), "%"));
+    if (c.t != null) facts.push(fact("Core temp", num(c.t), "°C", c.t >= 85 ? "hot" : ""));
+    if (c.c0 != null) facts.push(fact("Awake (C0)", num(c.c0), "%"));
+    if (c.c3 != null) facts.push(fact("Deep idle (C3)", num(c.c3), "%"));
+  }
+  if (g.pkg_t != null) facts.push(fact("CPU package", num(g.pkg_t), "°C", g.pkg_t >= 85 ? "hot" : ""));
+  if (g.cpu_w != null) facts.push(fact("CPU power", num(g.cpu_w), "W"));
+  if (g.cpu_load != null) facts.push(fact("CPU load", num(g.cpu_load), "%"));
+  if (g.ring_clk != null) facts.push(fact("Ring", ghz(g.ring_clk), "GHz"));
+  if (g.ring_v != null) facts.push(fact("Ring voltage", num(g.ring_v, 3), "V"));
+  if (g.uncore_vid != null) facts.push(fact("Uncore VID", num(g.uncore_vid, 3), "V"));
+  if (g.vcore != null) facts.push(fact("Vcore in (DLVR)", num(g.vcore, 3), "V"));
+  if (g.vr_v != null) facts.push(fact("VRM out", num(g.vr_v, 3), "V"));
+  if (g.vr_a != null) facts.push(fact("VRM current", num(g.vr_a), "A"));
+  if (g.latch_min != null) facts.push(fact("Vcore min / max", num(g.latch_min, 3) + " / " + num(g.latch_max, 3), "V"));
+  if (g.vccsa != null) facts.push(fact("VCCSA", num(g.vccsa, 3), "V"));
+  if (g.ngu_clk != null) facts.push(fact("NGU / D2D", ghz(g.ngu_clk) + " / " + ghz(g.d2d_clk), "GHz"));
+  if (g.mem_clk != null) facts.push(fact("Memory", num(g.mem_clk * 2), "MT/s"));
+  if (g.vddq != null) facts.push(fact("VDDQ", num(g.vddq, 3), "V"));
+  if (g.bclk != null) facts.push(fact("BCLK", num(g.bclk, 2), "MHz"));
+  if (g.gpu_w != null) facts.push(fact("GPU", num(g.gpu_w) + " W", num(g.gpu_load) + " %"));
+  if (g.cube != null) facts.push(fact("Water into PC", num(g.cube, 1), "°C"));
+  if (g.mode != null || g.prog) facts.push(fact("Cooling", g.prog ? g.prog[0].toUpperCase() + g.prog.slice(1) : "–", g.mode != null ? "Mode " + g.mode : ""));
+
+  const dump = d.kind !== "crash" ? "" : d.dump
+    ? `<div class="dump">Decoded from the crash dump: CPU <b>${d.dump.cpu}</b>${d.dump.fault ? `, failed in <code>${esc(d.dump.fault)}</code>` : ""}${d.dump.process ? `, process <code>${esc(d.dump.process)}</code>` : ""}.</div>`
+    : d.dump_file ? `<div class="dump">For the faulting driver, process and CPU: copy the dump into the logs folder from an <b>admin</b> PowerShell, then reopen this incident.<br>
+        <code id="dcmd">Copy-Item "${esc(d.dump_file)}" "${esc(d.dumps_dir || "<repo>\\tools\\pc_dashboard\\logs\\dumps\\")}" -Force</code>
+        <button class="btn" style="height:26px;font-size:12px;margin-left:6px" id="cpy">Copy</button></div>` : "";
+
+  box.innerHTML = `
+    <div class="ititle"><span class="pill ${d.kind}">${KIND[d.kind].toUpperCase()}</span>
+      <span class="iname">${esc(d.name)}</span>${d.code && d.code !== "0x0" ? `<span class="icode">${esc(d.code)}</span>` : ""}
+      ${d.records && d.records.length ? `<button class="btn" id="evv" style="margin-left:auto;height:28px;font-size:12px">View in Event Viewer</button>` : ""}</div>
+    <div class="imeta"><b>${when(d.time)}</b>${d.kind !== "silent" && d.kind !== "whea" && d.kind !== "gpu" && d.logged !== d.time ? " · last second logged before the restart (" + when(d.logged).split(", ").pop() + ")" : ""}
+      · ${d.core != null ? `<b>${coreName(d.core)}</b> (${esc(d.how)})` : "core not known" + (d.shown_core != null ? ` · busiest was <b>${coreName(d.shown_core)}</b>` : "")}</div>
+    <div class="plain">${esc(d.plain)}</div>
+    <ul class="find">${d.findings.map(f => `<li class="${f.lvl}">${esc(f.text)}</li>`).join("")}</ul>
+    ${dump ? `<div class="mt">${dump}</div>` : ""}
+    ${facts.length ? `<h2 class="mt" style="font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px">At that moment${d.at ? " · " + d.at.t : ""}</h2><div class="facts">${facts.join("")}</div>` : ""}
+    ${d.procs && d.procs.length ? `<h2 style="font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px">Busiest programs · last 10 s · 100 % = one core</h2><div class="procs">${procsHtml(d)}</div>` : ""}
+    ${d.series && d.series.length > 3 ? `<h2 style="font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px">Leading up to it · last ${Math.round(d.series.length / 60 * 10) / 10} min · ${coreName(d.shown_core)}</h2><div class="charts" id="charts"></div>` : ""}
+    ${d.cores ? `<h2 style="font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px">Every core at that moment</h2><div class="cores">${coresHtml(d)}</div>` : ""}
+    ${g.limits ? `<div class="dump mt">Limits active: ${esc(g.limits.replaceAll("|", ", "))}</div>` : ""}
+    <div class="dump mt" style="font-size:12px">${d.source === "flight" ? "Source: flight recorder (1 s, every core)." : "Source: basic logs (before the flight recorder ran)."}${d.params && d.params.length ? " Bugcheck parameters: <span class='mono'>" + d.params.map(esc).join(", ") + "</span>" : ""}</div>`;
+  const ev = $("evv");
+  if (ev) ev.onclick = async () => {
+    ev.disabled = true; ev.textContent = "Opening…";
+    let ok = false;
+    try { const r = await fetch("/eventvwr", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({records: d.records})}); ok = r.ok; } catch (e) {}
+    ev.textContent = ok ? "Opened in Event Viewer" : "Could not open Event Viewer"; setTimeout(() => { ev.disabled = false; ev.textContent = "View in Event Viewer"; }, 3000);
+  };
+  const cp = $("cpy"); if (cp) cp.onclick = () => navigator.clipboard.writeText($("dcmd").textContent).then(() => cp.textContent = "Copied");
+  if (d.series && d.series.length > 3) drawCharts(d);
+}
+
+function coresHtml(d) {
+  const order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+  return order.map(i => { const c = d.cores[i]; const p = P.includes(i);
+    return `<div class="core ${p ? "p" : "e"}${i === d.shown_core ? " me" : ""}">
+      <b>${p ? "P" : "E"}${i}</b> <span style="color:var(--label2)">${num(c.v, 3)} V</span>
+      <div class="clk">${c.clk ? Math.round(c.clk / 100) + "x" : "–"} <span style="font-size:12px;font-weight:500;color:var(--label2)">${ghz(c.eclk)} GHz eff</span></div>
+      ${c.t != null ? `<span style="color:${c.t >= 85 ? "var(--red)" : "var(--label2)"}">${num(c.t)} °C</span> · ` : ""}<span style="color:var(--label2)">${num(c.use)} %</span>
+      <div class="bar"><i style="width:${Math.min(100, c.use || 0)}%;background:${p ? "var(--indigo)" : "var(--teal)"}"></i></div></div>`; }).join("");
+}
+
+function drawCharts(d) {
+  const s = d.series, n = s.length;
+  const specs = [
+    { cap: "Clock (GHz)", lines: [{ k: "eclk", c: "var(--blue)", n: "effective", f: v => v / 1000, area: true }, { k: "clk", c: "var(--indigo)", n: "ratio", f: v => v / 1000, step: true }] },
+    { cap: "Voltage (V)", lines: [{ k: "v", c: "var(--red)", n: "core VID" }, { k: "ring_v", c: "var(--teal)", n: "ring" }, { k: "vr_v", c: "var(--purple)", n: "VRM out" }] },
+    { cap: "Load", lines: [{ k: "use", c: "var(--green)", n: "core %", area: true }, { k: "load", c: "var(--gray)", n: "CPU %" }] },
+    { cap: "Power & heat", lines: [{ k: "cpu_w", c: "var(--orange)", n: "CPU W" }, { k: "pkg_t", c: "var(--pink)", n: "package °C" }, { k: "temp", c: "var(--red)", n: "core °C" }, { k: "gpu_w", c: "var(--gray)", n: "GPU W" }] },
+  ];
+  const W = 1000, H = 90, box = $("charts");
+  let html = "";
+  specs.forEach((sp, si) => {
+    const lines = sp.lines.filter(l => s.some(p => p[l.k] != null));
+    if (!lines.length) return;
+    let lo = Infinity, hi = -Infinity;
+    lines.forEach(l => s.forEach(p => { if (p[l.k] != null) { const v = l.f ? l.f(p[l.k]) : p[l.k]; lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+    if (sp.cap === "Load") { lo = 0; hi = 100; }
+    if (hi - lo < 1e-6) { hi += 1; lo -= 1; }
+    const pad = (hi - lo) * .08; lo -= pad; hi += pad;
+    const X = i => i * W / Math.max(1, n - 1), Y = v => H - (v - lo) / (hi - lo) * H;
+    let paths = "";
+    lines.forEach(l => {
+      let p = "", prev = null, x0 = null;
+      s.forEach((pt, i) => { const v = pt[l.k]; if (v == null) { prev = null; return; }
+        const y = Y(l.f ? l.f(v) : v);
+        if (prev == null) { p += `M${X(i)},${y}`; if (x0 == null) x0 = X(i); } else p += l.step ? `H${X(i)}V${y}` : `L${X(i)},${y}`; prev = y; });
+      if (l.area && p && !/M.*M/.test(p)) paths += `<path d="${p}V${H}H${x0}Z" fill="${l.c}" opacity=".12"/>`;
+      paths += `<path d="${p}" fill="none" stroke="${l.c}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+    });
+    const fz = d.frozen > 1 ? `<rect x="${X(n - 1 - d.frozen)}" y="0" width="${X(n - 1) - X(n - 1 - d.frozen)}" height="${H}" fill="var(--red)" opacity=".08"/>` : "";
+    const end = `<line x1="${W}" x2="${W}" y1="-4" y2="${H + 4}" stroke="var(--red)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-dasharray="4 3"/>`;
+    const grid = [lo + pad, hi - pad].map(v => `<text x="-6" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--label2)" style="font-size:11px">${v >= 100 ? v.toFixed(0) : v.toFixed(v < 10 ? 2 : 1)}</text>`).join("");
+    html += `<div class="chart" data-si="${si}"><div class="cap">${sp.cap}${lines.map(l => `<span><i style="background:${l.c}"></i>${l.n}</span>`).join("")}</div>
+      <svg viewBox="-44 -6 ${W + 50} ${H + 12}" preserveAspectRatio="none">${fz}${paths}${end}${grid}</svg></div>`;
+  });
+  html += `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--label2);padding-left:4.4%"><span>${s[0].t}</span><span>${d.frozen > 1 ? "shaded: sensors frozen · " : ""}dashed line: the failure</span><span>${s[n - 1].t}</span></div>`;
+  box.innerHTML = html;
+  box.querySelectorAll("svg").forEach(svg => {
+    svg.onmousemove = e => { const r = svg.getBoundingClientRect(); const fx = (e.clientX - r.left) / r.width * (W + 50) - 44;
+      const i = Math.max(0, Math.min(n - 1, Math.round(fx / W * (n - 1)))); const p = s[i];
+      const hv = $("hov"); hv.style.display = "block"; hv.style.left = (e.pageX + 14) + "px"; hv.style.top = (e.pageY - 10) + "px";
+      hv.innerHTML = `<b>${p.t}</b> · ${Math.round((n - 1 - i))} s before<br>ratio ${p.clk ? Math.round(p.clk / 100) + "x" : "–"} · eff ${ghz(p.eclk)} GHz · ${num(p.v, 3)} V<br>core ${num(p.use)} % · CPU ${num(p.load)} % · ${num(p.cpu_w)} W${p.temp != null ? " · core " + num(p.temp) + " °C" : ""}${p.pkg_t != null ? " · pkg " + num(p.pkg_t) + " °C" : ""}${p.top ? "<br>busiest program: " + esc(p.top) : ""}`; };
+    svg.onmouseleave = () => $("hov").style.display = "none";
+  });
+}
+
+function procsHtml(d) {
+  const mx = Math.max(100, ...d.procs.map(p => p.peak));
+  return d.procs.map(p => `<div class="prow${p.peak >= 80 ? " hog" : ""}"><span class="pname">${esc(p.name)}</span>
+    <span class="pbar"><i style="width:${p.avg / mx * 100}%"></i><b style="left:${p.peak / mx * 100}%"></b></span>
+    <span class="pval">${p.avg} %<small> · peak ${p.peak} %</small></span></div>`).join("");
+}
+
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>

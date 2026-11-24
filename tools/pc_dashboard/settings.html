@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCS Settings</title>
+<script src="/theme.js"></script>
+<script src="/boards.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root { --bg: #E7E9E5; --card: #F8F9F7; --card2: #DDE0DB; --label: #2A2B2A; --label2: rgba(42,43,42,.62); --label3: rgba(42,43,42,.32);
+  --sep: rgba(42,43,42,.12); --fill: rgba(42,43,42,.07); --bar: rgba(231,233,229,.86); --accent: #E4572E; --on-accent: #fff;
+  --green: #3F8F4E; --red: #C42B2B; --font: "Plus Jakarta Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font: 14px/1.4 var(--font); -webkit-font-smoothing: antialiased; }
+.topbar { position: sticky; top: 0; z-index: 10; background: var(--bar); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid var(--sep); }
+.bar { max-width: 1240px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 16px; }
+.brand { font-weight: 700; letter-spacing: .08em; font-size: 15px; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(900px 520px at 12% -8%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+              radial-gradient(800px 600px at 100% 0%, color-mix(in srgb, var(--blue) 10%, transparent), transparent 70%); }
+main { max-width: 860px; margin: 0 auto; padding: 30px 40px 60px; }
+.hi { color: var(--label2); font-size: 14px; font-weight: 500; }
+h1 { font-size: 32px; font-weight: 650; letter-spacing: -.025em; margin: 4px 0 22px; }
+h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--label2); margin: 28px 4px 8px; }
+.group { background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--sep); border-radius: 20px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid var(--sep); min-height: 56px; }
+.row:first-child { border-top: 0; }
+.row .t { flex: 1; min-width: 0; }
+.row .t b { display: block; font-weight: 600; }
+.row .t span { color: var(--label2); font-size: 13px; }
+.val { color: var(--label2); font-size: 13px; text-align: right; }
+.seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--fill); gap: 2px; }
+.seg button { border: 0; background: none; color: var(--label2); font: 500 13px var(--font); padding: 5px 13px; border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--card); color: var(--label); font-weight: 600; box-shadow: 0 0 0 1px var(--sep); }
+.sw { position: relative; width: 42px; height: 24px; flex: none; }
+.sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+.sw i { position: absolute; inset: 0; border-radius: 12px; background: var(--label3); transition: background .2s; cursor: pointer; }
+.sw i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.sw input:checked + i { background: var(--accent); }
+.sw input:checked + i::after { transform: translateX(18px); }
+.sw input:disabled + i { opacity: .45; cursor: default; }
+.pals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 16px 18px; }
+@media (max-width: 1000px) { .pals { grid-template-columns: repeat(3, 1fr); } }
+.pal { border: 1px solid var(--sep); border-radius: 14px; overflow: hidden; cursor: pointer; background: var(--card2); padding: 0; font: inherit;
+  color: var(--label); text-align: left; transition: transform .1s, box-shadow .15s; }
+.pal:hover { box-shadow: 0 0 0 1px var(--label3); }
+.pal.on { box-shadow: 0 0 0 2px var(--accent); }
+.pal .strip { display: flex; height: 64px; }
+.pal .strip i { flex: 1; }
+.pal b { display: block; padding: 9px 11px 10px; font-size: 13px; font-weight: 650; }
+.pal b small { display: block; font-size: 11px; font-weight: 500; color: var(--label2); margin-top: 1px; min-height: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.note { color: var(--label2); font-size: 13px; padding: 10px 4px 0; }
+.btn { border: 1px solid var(--sep); background: var(--card2); color: var(--label); font: 600 13px var(--font); padding: 7px 14px;
+  border-radius: 8px; cursor: pointer; }
+.btn:hover { border-color: var(--label3); }
+input.txt { font: 13px var(--font); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--sep); background: var(--bg);
+  color: var(--label); width: 230px; }
+.hidden { display: none !important; }
+@media (max-width: 700px) { .pals { grid-template-columns: repeat(2, 1fr); }
+  main { padding: 20px 16px 48px; } .row { flex-wrap: wrap; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell">
+<aside class="rail" data-page="settings"></aside>
+<main>
+  <div class="hi">Make PCS yours</div>
+  <h1>Settings</h1>
+
+  <h2>Appearance</h2>
+  <div class="group">
+    <div class="row"><div class="t"><b>Theme</b><span>System follows Windows' light / dark setting.</span></div>
+      <div class="seg" id="mode"><button data-v="auto">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="pals" id="pals"></div>
+  </div>
+
+  <div id="appSec" class="hidden">
+    <h2>Desktop app</h2>
+    <div class="group">
+      <div class="row"><div class="t"><b>Start with Windows</b><span>Opens in the tray when you sign in.</span></div>
+        <label class="sw"><input type="checkbox" id="autostart"><i></i></label></div>
+      <div class="row"><div class="t"><b>Close to tray</b><span>Closing the window keeps PCS running in the notification area.</span></div>
+        <label class="sw"><input type="checkbox" id="tray"><i></i></label></div>
+      <div class="row"><div class="t"><b>Open on</b><span>The page the window shows first.</span></div>
+        <div class="seg" id="start"><button data-v="/home">Home</button><button data-v="/">Dashboard</button></div></div>
+      <div class="row hidden" id="updRow"><div class="t"><b>Updates</b><span id="updSub">–</span></div>
+        <button class="btn" id="updBtn">Check now</button></div>
+      <div class="row"><div class="t"><b>Service address</b><span>Where the PCS service runs. Restart the app after a change.</span></div>
+        <input class="txt" id="url" spellcheck="false"></div>
+    </div>
+  </div>
+
+  <h2>Notifications and logging</h2>
+  <div class="group">
+    <div class="row"><div class="t"><b>Crash notifications</b><span>A Windows notification for blue screens, WHEA errors and GPU driver resets.</span></div>
+      <label class="sw"><input type="checkbox" id="alerts"><i></i></label></div>
+    <div class="row"><div class="t"><b>Flight recorder</b><span>Logs every core once a second so crashes can be analysed. Runs across reboots.</span></div>
+      <label class="sw"><input type="checkbox" id="flight"><i></i></label></div>
+  </div>
+
+  <h2>Motherboard</h2>
+  <div class="group">
+    <div class="row"><div class="t"><b id="brdName">–</b><span>Drawn live on the Dashboard with its temperatures and fan headers.</span></div>
+      <a class="btn" href="/setup?next=/settings" style="text-decoration:none">Change</a></div>
+  </div>
+
+  <h2>Controller</h2>
+  <div class="group">
+    <div class="row"><div class="t"><b>Connection</b><span id="connSub">–</span></div><div class="val" id="conn">–</div></div>
+    <div class="row"><div class="t"><b>Case display</b><span>The screen inside the case. The backlight stays on when it is off.</span></div>
+      <label class="sw"><input type="checkbox" id="disp"><i></i></label></div>
+  </div>
+
+  <h2>About</h2>
+  <div class="group">
+    <div class="row"><div class="t"><b>Firmware</b></div><div class="val" id="fw">–</div></div>
+    <div class="row"><div class="t"><b>Sensors</b></div><div class="val" id="src">–</div></div>
+    <div class="row hidden" id="appVerRow"><div class="t"><b>Desktop app</b></div><div class="val" id="appVer">–</div></div>
+  </div>
+  <div class="note">Appearance is stored on this computer for this window. The other settings apply to the PCS service.</div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const PALS = [
+  ["glacier", "Glacier", ["#0D1117", "#161B22", "#3B82F6", "#22D3EE", "#F4F6FA"], "Default · light: Frost"],
+  ["aurora", "Aurora", ["#0B1020", "#141A2E", "#22D3EE", "#8B5CF6", "#F5F4FB"], "Cyan to violet"],
+  ["lime", "Graphite Lime", ["#111214", "#1A1B1E", "#B8F35A", "#7DD3A8", "#F3F4F1"], "Minimal, lime accent"],
+  ["ember", "Ember", ["#141210", "#1E1B18", "#FF7A1A", "#FFB020", "#F8F5F2"], "Heat, for overclocking"],
+  ["harbor", "Harbor", ["#DAD2D8", "#0B3142", "#F0C808", "#48A9A6", "#ED7D3A"], "Navy, teal and amber"],
+  ["paprika", "Paprika", ["#E4572E", "#2A2B2A", "#CFD2CD", "#0267C1", "#4A7B9D"]],
+  ["scarlet", "Scarlet", ["#3581B8", "#DA2C38", "#191919", "#272727", "#669D31"]],
+  ["cinnabar", "Cinnabar", ["#3581B8", "#CCCCCC", "#191919", "#272727", "#F24236"]],
+  ["sandstone", "Sandstone", ["#262322", "#EEF4D4", "#6CA6C1", "#C57B57", "#F24236"]],
+];
+
+function drawAppearance() {
+  $("mode").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === pcsTheme.theme));
+  $("pals").innerHTML = PALS.map(([id, name, cols, sub]) => `<button class="pal${id === pcsTheme.palette ? " on" : ""}" data-id="${id}">
+    <div class="strip">${cols.map(c => `<i style="background:${c}"></i>`).join("")}</div><b>${name}<small>${sub || ""}</small></b></button>`).join("");
+  $("pals").querySelectorAll(".pal").forEach(b => b.onclick = () => { pcsTheme.set(null, b.dataset.id); drawAppearance(); });
+}
+$("mode").querySelectorAll("button").forEach(b => b.onclick = () => { pcsTheme.set(b.dataset.v); drawAppearance(); });
+addEventListener("pcs-theme", drawAppearance);
+
+// ---- desktop app bridge (WebView2): only inside PCS.exe ----
+const host = window.chrome && window.chrome.webview;
+let app = null;
+function appSend(m) { if (host) host.postMessage(m); }
+if (host) {
+  host.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.type !== "app") return;
+    app = m;
+    $("appSec").classList.remove("hidden"); $("appVerRow").classList.remove("hidden");
+    $("autostart").checked = !!m.autostart; $("tray").checked = !!m.closeToTray;
+    $("start").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === (m.startPage || "/home")));
+    if (document.activeElement !== $("url")) $("url").value = m.url || "";
+    $("appVer").textContent = m.version || "–";
+    // updates (standalone package only: the app reports "update" when it knows where to look)
+    const u = m.update;
+    $("updRow").classList.toggle("hidden", !u);
+    if (u) {
+      $("updSub").textContent = u.state === "available" ? `PCS ${u.version} is available.${u.notes ? " " + u.notes.split("\n")[0].slice(0, 140) : ""}`
+        : u.state === "downloading" ? `Downloading PCS ${u.version}… ${u.pct ?? 0} %`
+        : u.state === "checking" ? "Checking GitHub…"
+        : u.state === "error" ? "Update check failed: " + (u.error || "?")
+        : `Up to date (${m.version}).` + (u.checked ? ` Checked ${new Date(u.checked * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : "");
+      $("updBtn").textContent = u.state === "available" ? `Update to ${u.version}` : "Check now";
+      $("updBtn").disabled = u.state === "downloading" || u.state === "checking";
+      $("updBtn").onclick = () => appSend({ cmd: u.state === "available" ? "app-update" : "app-check-update" });
+    }
+  });
+  appSend({ cmd: "app-get" });
+  $("autostart").onchange = e => appSend({ cmd: "app-set", key: "autostart", value: e.target.checked });
+  $("tray").onchange = e => appSend({ cmd: "app-set", key: "closeToTray", value: e.target.checked });
+  $("start").querySelectorAll("button").forEach(b => b.onclick = () => appSend({ cmd: "app-set", key: "startPage", value: b.dataset.v }));
+  $("url").onchange = e => appSend({ cmd: "app-set", key: "url", value: e.target.value.trim() });
+}
+
+// ---- service settings ----
+async function post(url, body) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r;
+}
+async function load() {
+  try { const p = await (await fetch("/prefs", { cache: "no-store" })).json(); $("alerts").checked = !!p.alerts;
+    $("brdName").textContent = p.board && window.PCS_BOARDS && PCS_BOARDS[p.board] ? PCS_BOARDS[p.board].name : "Not chosen yet"; } catch (e) { $("alerts").disabled = true; }
+  try { const a = await (await fetch("/analyzer/state", { cache: "no-store" })).json(); $("flight").checked = !!a.enabled; } catch (e) { $("flight").disabled = true; }
+  try {
+    const s = await (await fetch("/status", { cache: "no-store" })).json();
+    $("conn").textContent = s.connected ? "Connected" : s.released ? "Released for flashing" : "Not connected";
+    $("connSub").textContent = s.connected ? `Arduino Mega on ${s.port || "?"}` : (s.error || "–");
+    $("fw").textContent = (s.fw || "–").replace("PCS controller ", "");
+    $("src").textContent = s.pc_src || "–";
+    if (document.activeElement !== $("disp")) $("disp").checked = s.disp == null ? true : !!+s.disp;
+    $("disp").disabled = !s.connected;
+  } catch (e) { $("conn").textContent = "Service not running"; }
+}
+$("alerts").onchange = e => post("/prefs", { alerts: e.target.checked }).catch(load);
+$("flight").onchange = e => post("/analyzer", { on: e.target.checked }).catch(load);
+$("disp").onchange = e => post("/cmd", { cmd: e.target.checked ? "scr1" : "scr0" }).catch(load);
+
+drawAppearance(); load(); setInterval(load, 5000);
+fetch("/status").then(r => r.json()).then(s => window.pcsLive && pcsLive(s.connected)).catch(() => window.pcsLive && pcsLive(false));
+</script>
+</body>
+</html>

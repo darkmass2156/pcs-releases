@@ -106,3 +106,9 @@ connection is the update check against this page.
 
 Found a bug or a sensor that's wrong? Open an **[issue](../../issues)** with your CPU, GPU and motherboard model and a
 screenshot.
+
+## Source
+
+PCS is open source under **GPL-3.0**. The code is in [`tools/`](tools); [BUILDING.md](BUILDING.md) explains how to build
+it, [THIRD_PARTY.md](THIRD_PARTY.md) lists what it uses. Pull requests are welcome, especially new motherboard drawings
+and sensor mappings.

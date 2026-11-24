@@ -1,0 +1,2514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/boards.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<title>PCS Dashboard</title>
+<style>
+:root {
+  --bg: #F2F2F7; --card: #FFFFFF; --card2: #F2F2F7; --label: #000000; --label2: rgba(60,60,67,.60);
+  --label3: rgba(60,60,67,.30); --sep: rgba(60,60,67,.12); --fill: rgba(120,120,128,.12); --bar: rgba(242,242,247,.72);
+  --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --teal: #30B0C7; --purple: #AF52DE;
+  --indigo: #5856D6; --gray: #8E8E93; --yellow: #FFCC00; --pink: #FF2D55;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E; --label: #FFFFFF; --label2: rgba(235,235,245,.60);
+    --label3: rgba(235,235,245,.30); --sep: rgba(84,84,88,.45); --fill: rgba(120,120,128,.24); --bar: rgba(0,0,0,.72);
+    --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --teal: #40CBE0; --purple: #BF5AF2;
+    --indigo: #5E5CE6; --gray: #8E8E93; --yellow: #FFD60A; --pink: #FF375F; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E; --label: #FFFFFF; --label2: rgba(235,235,245,.60);
+  --label3: rgba(235,235,245,.30); --sep: rgba(84,84,88,.45); --fill: rgba(120,120,128,.24); --bar: rgba(0,0,0,.72);
+  --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --teal: #40CBE0; --purple: #BF5AF2;
+  --indigo: #5E5CE6; --gray: #8E8E93; --yellow: #FFD60A; --pink: #FF375F; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--label); font-family: var(--font);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "tnum"; }
+body { min-height: 100vh; }
+.wrap { max-width: none; margin: 0 auto; padding: 0 clamp(16px, 2vw, 40px) 48px; }   /* fills the window, any width (was 1240 px, then 2400) */
+
+/* top bar */
+.topbar { position: sticky; top: 0; z-index: 10; background: var(--bar);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: .5px solid var(--sep); }
+.topbar .wrap { display: flex; align-items: center; gap: 16px; padding-top: 10px; padding-bottom: 10px; }
+.brand { font-weight: 600; font-size: 15px; letter-spacing: -.01em; }
+.conn { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--label2); }
+.svcbtn { border: 0; background: var(--fill); color: var(--label); height: 30px; padding: 0 14px; border-radius: 15px;
+  font: 600 13px var(--font); cursor: pointer; margin-right: 8px; }
+.svcbtn.start { background: var(--blue); color: #fff; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); flex: none; }
+.dot.ok { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent); }
+.dot.warn { background: var(--orange); }
+.dot.bad { background: var(--red); }
+.spacer { flex: 1; }
+.iconbtn { border: 0; background: var(--fill); color: var(--label); width: 30px; height: 30px; border-radius: 15px;
+  cursor: pointer; font-size: 14px; display: grid; place-items: center; }
+
+/* header */
+.hero { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; padding: 28px 0 20px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .04em; }
+h1 { font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -.025em; margin: 4px 0 0; }
+.hsub { font-size: 15px; color: var(--label2); margin-top: 6px; }
+
+/* segmented control */
+.seg { display: inline-flex; background: var(--fill); border-radius: 9px; padding: 2px; position: relative; }
+.seg button { position: relative; z-index: 1; border: 0; background: transparent; color: var(--label);
+  font: 500 13px var(--font); padding: 6px 16px; border-radius: 7px; cursor: pointer; min-width: 84px; }
+.seg button.on { background: var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); font-weight: 600; }
+:root[data-theme="dark"] .seg button.on { background: #636366; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button.on { background: #636366; } }
+.seg.small button { min-width: 0; padding: 4px 12px; font-size: 12px; }
+.modebox { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.modebox .hint { font-size: 12px; color: var(--label2); }
+.seg button.alpha { color: var(--label2); }
+.seg button.alpha::after { content: "α"; font-size: 10px; margin-left: 3px; color: var(--orange); }
+#progLine { font-size: 12px; color: var(--label2); text-align: right; max-width: 420px; }
+#progLine b { color: var(--label); font-weight: 600; }
+#progLine a { color: var(--blue, #0a84ff); text-decoration: none; font-weight: 600; }
+#progLine:has(.swt) { max-width: 600px; }
+.swt { margin: 6px 0 4px auto; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.swt th, .swt td { padding: 1px 6px; text-align: right; }
+.swt th { font-weight: 500; color: var(--label2); }
+.swt td { color: var(--label); }
+.stip { position: absolute; z-index: 50; pointer-events: none; display: none; background: var(--card); color: var(--label);
+  border-radius: 8px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.18); white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.stip b { font-weight: 600; }
+.spark { cursor: crosshair; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal.on { display: flex; }
+.modal .mbox { background: var(--card); color: var(--label); border-radius: 14px; padding: 20px 22px; max-width: 420px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+.modal h3 { margin: 0 0 8px; font-size: 17px; }
+.modal p { margin: 0 0 16px; font-size: 14px; color: var(--label2); line-height: 1.45; }
+.modal .mrow { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* banner */
+.banner { display: none; align-items: center; gap: 12px; border-radius: 14px; padding: 12px 16px; margin-bottom: 16px;
+  font-size: 15px; font-weight: 500; }
+.banner.show { display: flex; }
+.banner.fault { background: color-mix(in srgb, var(--red) 14%, var(--card)); color: var(--red); }
+.banner.alarm { background: color-mix(in srgb, var(--orange) 14%, var(--card)); color: var(--orange); }
+.banner.info { background: var(--card); color: var(--label2); }
+.banner .bi { width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center;
+  font-size: 13px; font-weight: 700; flex: none; background: currentColor; }
+.banner .bi span { color: var(--card); }
+
+/* cards */
+.grid { display: grid; gap: 16px; margin-bottom: 16px; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g2 { grid-template-columns: 1.15fr 1fr; }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 980px) { .g3, .g4 { grid-template-columns: 1fr 1fr; } .g2 { grid-template-columns: 1fr; } }
+/* Wide windows (owner 2026-11-10): fixed blocks, rearranged only when a whole extra 1196 px column fits (layoutFlow()):
+   1 column = the original page (centred, not stretched); 2 = board column to the right; 3 = chart / controls / log
+   column too. Between the steps nothing moves. Below 1260 px the old responsive layout. */
+@media (min-width: 1260px) { .flow:not(.cols) { max-width: 1196px; margin: 0 auto; } }
+.flow.cols { display: flex; gap: 16px; justify-content: center; align-items: flex-start; }
+.flow.cols > .fcol { flex: 0 0 1196px; width: 1196px; min-width: 0; }
+/* widest layout (3 columns): no scrolling, the page is scaled to fit the window height (fitFlow()) */
+html.fit, html.fit body { overflow: hidden; height: 100%; }
+html.fit body > .wrap { transform-origin: top left; margin: 0; max-width: none; }
+html.fit .flow.cols > .fcol { flex: 1 1 1196px; width: auto; }   /* columns widen so the scaled page fills the width */
+.topbar .wrap, .wrap > .hero, .wrap > .banner, .wrap > .foot { max-width: var(--flow-w, none); margin-left: auto; margin-right: auto; }
+@media (max-width: 620px) { .g3, .g4 { grid-template-columns: 1fr; } h1 { font-size: 32px; } .wrap { padding: 0 16px 40px; }
+  .modebox { margin-left: 0; align-items: flex-start; } }
+.card { background: var(--card); border-radius: 18px; padding: 18px 20px; box-shadow: var(--shadow); min-width: 0; }
+/* hardware (PCB) cards */
+#hwGrid { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }   /* upright CPU narrower, GPU board wider */
+@media (max-width: 980px) { #hwGrid { grid-template-columns: minmax(0, 1fr); } }
+.pcbsvg { width: 100%; height: auto; max-height: 760px; display: block; margin-top: 10px; font-family: var(--font); }
+.pcbsvg .pcb { fill: none; stroke: var(--label); stroke-opacity: .85; stroke-width: 1.5; }
+.pcbsvg .die { fill: var(--fill); stroke: var(--label); stroke-opacity: .55; stroke-width: 1; }
+.pcbsvg .cell { stroke: var(--label); stroke-opacity: .35; stroke-width: 1; }
+.pcbsvg .pad { fill: var(--label); fill-opacity: .18; }
+.pcbsvg .gold { fill: var(--yellow); fill-opacity: .55; }
+.pcbsvg text { font-variant-numeric: tabular-nums; }
+/* motherboard card */
+.mbwrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 12px; }
+@media (max-width: 1150px) { .mbwrap { grid-template-columns: 1fr; } .mbboard { max-width: 720px; margin: 0 auto; } }
+.mbboard { width: 100%; height: auto; max-height: 900px; display: block; font-family: var(--font); }
+.mbboard text { font-variant-numeric: tabular-nums; }
+#mbSide { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; align-content: start; grid-auto-flow: dense; }
+.mbt.wall { grid-column: 1 / -1; }
+.mbt { background: var(--card2); border-radius: 16px; padding: 12px 14px 13px; min-width: 0; }
+.mbt.w2 { grid-column: span 2; }
+@media (max-width: 420px) { .mbt.w2 { grid-column: auto; } }
+.mbk { font-size: 11px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .05em; }
+.mbv { font-size: 28px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.mbv small { font-size: 15px; font-weight: 600; color: var(--label2); }
+.mbs { font-size: 12px; color: var(--label2); margin-top: 2px; }
+.mbbar { height: 5px; border-radius: 3px; background: var(--fill); overflow: hidden; margin-top: 9px; }
+.mbbar i { display: block; height: 100%; border-radius: 3px; }
+.mbdimms { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 9px; }
+.mbdimms div { display: flex; flex-direction: column; background: var(--fill); border-radius: 11px; padding: 7px 11px; }
+.mbdimms span { font-size: 11px; color: var(--label2); }
+.mbdimms b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.mbfr { display: grid; grid-template-columns: 78px minmax(70px, 1fr) minmax(40px, 1.3fr) 76px; align-items: center; gap: 10px;
+  padding: 6px 0; border-top: .5px solid var(--sep); font-size: 12.5px; }
+.mbt .mbk + .mbfr { margin-top: 6px; }
+.mbfr .mbbar { margin-top: 0; }
+.mbfn { font-weight: 600; }
+.mbfrole { color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mbfrpm { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mbfrpm small { font-weight: 500; color: var(--label2); }
+.mbfr:not(.on) { opacity: .5; }
+.mbfr.on .mbfrpm { color: var(--blue); }
+.mbrails { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); column-gap: 18px; margin-top: 6px; }
+.mbrr { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(44px, auto); gap: 8px; padding: 5px 0; border-top: .5px solid var(--sep);
+  font-size: 12.5px; align-items: baseline; }
+.mbrr span { color: var(--label2); }
+.mbrr b { font-variant-numeric: tabular-nums; }
+.mbrr em { font-style: normal; font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+/* board drawing: outlines only, like the CPU / GPU cards; parts shaded by temperature (cellRect) */
+.mbedge { fill: none; stroke: var(--label); stroke-opacity: .85; stroke-width: 1.6; }
+.mbo { fill: none; stroke: var(--label); stroke-opacity: .62; stroke-width: 1.15; stroke-linejoin: round; }
+.mbo2 { fill: none; stroke: var(--label); stroke-opacity: .3; stroke-width: 1; stroke-linejoin: round; }
+.mbo3 { fill: none; stroke: var(--label); stroke-opacity: .2; stroke-width: 1; }
+.mbrgbo { fill: none; stroke: var(--indigo); stroke-opacity: .75; stroke-width: 1.2; }
+.mbgold { fill: none; stroke: var(--yellow); stroke-opacity: .55; stroke-width: 1.2; }
+.mbmax { font-size: 23px; font-weight: 800; letter-spacing: .22em; fill: none; stroke: var(--label); stroke-opacity: .5; stroke-width: 1; }
+.mbrog { font-size: 40px; font-weight: 900; fill: none; stroke: var(--label); stroke-opacity: .3; stroke-width: 1.1; }
+.mbapex { font-size: 26px; font-weight: 900; letter-spacing: .12em; fill: none; stroke: var(--label); stroke-opacity: .45; stroke-width: 1.1; }
+.mbqtxt { font-size: 14px; font-weight: 700; fill: none; stroke: var(--label); stroke-opacity: .35; stroke-width: .8; font-family: var(--mono); }
+.mbtiny { font-size: 7.5px; font-weight: 600; fill: var(--label2); letter-spacing: .04em; }
+.mbtiny2 { font-size: 7.5px; font-weight: 700; fill: var(--label2); letter-spacing: .12em; }
+.mbsmall { font-size: 10px; fill: var(--label2); font-weight: 600; }
+.mbhdr { fill: none; stroke: var(--label); stroke-opacity: .6; stroke-width: 1.1; transition: fill .4s, stroke .4s; }
+.mbhdr.on { fill: var(--blue); fill-opacity: .3; stroke: var(--blue); stroke-opacity: 1; }
+#mbTsen.on { fill: var(--pink); fill-opacity: .3; stroke: var(--pink); stroke-opacity: 1; }
+.mblead { fill: none; stroke: var(--label); stroke-opacity: .25; stroke-width: 1; }
+.mblead.on { stroke: var(--blue); stroke-opacity: .55; }
+.mbrotring { fill: none; stroke: var(--label); stroke-opacity: .3; stroke-width: 1.1; }
+.mbspinbox { fill: transparent; }
+.mbspin path { fill: none; stroke: var(--label); stroke-opacity: .4; stroke-width: 1; }
+.mbhub { fill: none; stroke: var(--label); stroke-opacity: .45; }
+.on > .mbrotring { stroke: var(--blue); stroke-opacity: .8; }
+.on > .mbspin path { stroke: var(--blue); stroke-opacity: 1; fill: var(--blue); fill-opacity: .18; }
+.mbspin { animation: mbspin 1s linear infinite; animation-play-state: paused; transform-box: fill-box; transform-origin: center; }
+@keyframes mbspin { to { transform: rotate(360deg); } }
+.mbtagk { font-size: 10px; font-weight: 700; fill: var(--label2); letter-spacing: .08em; }
+.mbtagv { font-size: 21px; font-weight: 800; }
+.mbtagk2 { font-size: 10.5px; fill: var(--label2); font-weight: 600; }
+.mbsock { font-size: 9px; font-weight: 700; fill: var(--label2); letter-spacing: .1em; }
+.mbbig { font-size: 30px; font-weight: 800; letter-spacing: -.03em; }
+.mbmid { font-size: 11px; fill: var(--label); font-weight: 700; }
+.mbmidb { font-size: 18px; font-weight: 800; }
+.mbdimm { font-size: 10.5px; font-weight: 700; }
+.mbslotlab { font-size: 10.5px; font-weight: 700; fill: var(--label2); }
+.mbfan { font-size: 11.5px; font-weight: 700; fill: var(--label2); }
+.mbfan.on { fill: var(--blue); }
+.mbhit { fill: transparent; }
+
+#mbOc { grid-column: 1 / -1; }
+#mbOc:empty { display: none; }
+.mbsec { font-size: 17px; font-weight: 700; margin: 4px 2px 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.mbsec span { font-size: 12px; font-weight: 500; color: var(--label2); }
+.mbsec a { color: var(--blue); text-decoration: none; font-weight: 600; }
+.mbocg { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.mbocg .mbrails { grid-template-columns: 1fr; }
+.mbchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mbchip { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--fill); color: var(--label2); }
+.mbchip.ok { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.mbchip.warn { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+.mbunit { font-size: 9px; font-weight: 600; opacity: .7; }
+.mbmidb2 { font-size: 15px; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .mbspin { animation: none; } }
+.card.dim { position: relative; }
+.card.dim::after { content: attr(data-dim); position: absolute; inset: 0; border-radius: 18px; z-index: 2;
+  background: rgba(120,120,128,.42); -webkit-backdrop-filter: grayscale(1); backdrop-filter: grayscale(1);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
+.ctitle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--label2); }
+.ctitle .sw { width: 10px; height: 10px; border-radius: 3px; }
+.ctitle .right { margin-left: auto; font-weight: 500; }
+.big { font-size: 46px; font-weight: 600; letter-spacing: -.03em; line-height: 1.05; margin-top: 10px; }
+.big .u { font-size: 24px; font-weight: 500; color: var(--label2); margin-left: 2px; letter-spacing: 0; }
+.mid { font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1.1; margin-top: 8px; }
+.mid .u { font-size: 17px; font-weight: 500; color: var(--label2); margin-left: 2px; }
+.note { font-size: 13px; color: var(--label2); margin-top: 4px; }
+.spark { width: 100%; height: 44px; display: block; margin-top: 12px; }
+
+/* list rows */
+.rows { margin-top: 12px; }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; font-size: 15px;
+  border-top: .5px solid var(--sep); }
+.row:first-child { border-top: 0; }
+.row .k { color: var(--label); display: flex; align-items: center; gap: 8px; }
+.row .v { color: var(--label2); font-variant-numeric: tabular-nums; }
+/* cooling intent (owner 2026-11-11): what the cooling is trying to do right now */
+.intent { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 5px 12px 5px 10px; border-radius: 999px;
+  background: var(--fill); font-size: 14px; color: var(--label2); }
+.intent b { color: var(--label); font-weight: 650; }
+.intent .idot { width: 9px; height: 9px; border-radius: 50%; background: var(--label3); }
+.intent.cool .idot { background: var(--blue); animation: ipulse 1.2s ease-in-out infinite; }
+.intent.stab .idot { background: var(--orange); animation: ipulse 2s ease-in-out infinite; }
+.intent.hold .idot { background: var(--green); }
+.intent.back .idot { background: var(--teal); animation: ipulse 2s ease-in-out infinite; }
+.intent.bad .idot { background: var(--red); animation: ipulse .5s ease-in-out infinite; }
+@keyframes ipulse { 50% { opacity: .25; } }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.pill.g { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.pill.r { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red); }
+.pill.o { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+.pill.n { background: var(--fill); color: var(--label2); }
+
+/* dew margin bar */
+.mbar { position: relative; height: 8px; border-radius: 4px; background: var(--fill); margin-top: 14px; overflow: hidden; }
+.mbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--green); transition: width .6s, background .3s; }
+.mscale { position: relative; height: 14px; font-size: 11px; color: var(--label3); margin-top: 5px; }
+.mscale span { position: absolute; top: 0; }
+.mbar::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10%; z-index: 1;
+  border-right: 1.5px solid var(--red); pointer-events: none; }
+
+/* valve ring */
+.valve { display: flex; align-items: center; gap: 22px; margin-top: 10px; }
+.ring { width: 132px; height: 132px; flex: none; }
+.ring .trk { stroke: var(--fill); }
+.ring .val { stroke: var(--blue); transition: stroke-dashoffset .8s cubic-bezier(.3,.7,.2,1); }
+.ring text { fill: var(--label); font-family: var(--font); }
+.valve .rows { flex: 1; margin-top: 0; }
+
+/* chart */
+.chart-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.chart-head h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+.legend { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.legend button { border: 0; background: var(--fill); color: var(--label); font: 500 12px var(--font);
+  padding: 4px 10px 4px 8px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.legend button i { width: 8px; height: 8px; border-radius: 50%; }
+.legend button.off { opacity: .4; }
+.chartbox { position: relative; height: 300px; margin-top: 14px; }
+#chart { width: 100%; height: 100%; display: block; }
+.tip { position: absolute; pointer-events: none; background: var(--card); border-radius: 12px; padding: 8px 10px;
+  font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.18); border: .5px solid var(--sep); display: none; min-width: 130px; }
+.tip b { display: block; font-weight: 600; margin-bottom: 4px; color: var(--label2); }
+.tip div { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+.tip div span:first-child { display: flex; align-items: center; gap: 6px; }
+.tip i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* console */
+.log { height: 236px; overflow-y: auto; font: 12px/1.55 var(--mono); color: var(--label2); margin-top: 12px;
+  background: var(--card2); border-radius: 12px; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; }
+.log .me { color: var(--blue); }
+.log .on { color: var(--orange); }
+.log .bad { color: var(--red); }
+.cmd { display: flex; gap: 8px; margin-top: 10px; }
+.cmd input { flex: 1; min-width: 0; border: 0; background: var(--fill); color: var(--label); border-radius: 10px;
+  padding: 9px 12px; font: 15px var(--font); outline: none; }
+.cmd input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 35%, transparent); }
+.btn { border: 0; background: var(--blue); color: #fff; font: 600 15px var(--font); border-radius: 10px;
+  padding: 9px 16px; cursor: pointer; }
+.btn:active { opacity: .7; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chips button { border: 0; background: var(--fill); color: var(--blue); font: 500 12px var(--font);
+  padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+.air.g2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 980px) { .air.g2 { grid-template-columns: 1fr; } }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* controls */
+.ctlhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ctlhead h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+.ctlhead .grow { flex: 1; }
+.ctlhead .hint { font-size: 13px; color: var(--label2); }
+.btn.sec { background: var(--fill); color: var(--blue); }
+.btn.warn { background: var(--orange); }
+.btn:disabled { opacity: .4; cursor: default; }
+.ctlgrid { display: grid; grid-template-columns: minmax(140px, .6fr) 1fr 1fr 1.45fr; gap: 12px; margin-top: 14px; }
+@media (max-width: 1100px) { .ctlgrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) { .ctlgrid { grid-template-columns: 1fr; } }
+.ctlbox { background: var(--card2); border-radius: 14px; padding: 14px 16px; transition: opacity .25s; }
+.ctlbox.locked { opacity: .45; pointer-events: none; }
+.ctlrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 31px; }
+.ctlrow .k { font-size: 15px; font-weight: 600; }
+.ctlrow .v { font-size: 15px; color: var(--label2); font-variant-numeric: tabular-nums; }
+.ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--label3); margin-top: 2px; }
+.ctlbox .chips { margin-top: 10px; }
+.stepper { display: flex; align-items: center; gap: 5px; margin-top: 8px; min-width: 0; }
+.ctlbox { min-width: 0; }
+.stepper button, .jog button { border: 0; background: var(--fill); color: var(--blue); font: 600 13px var(--font);
+  height: 30px; min-width: 34px; padding: 0 8px; border-radius: 8px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.stepper button:active, .jog button:active { opacity: .6; }
+.stepper input { width: 58px; height: 30px; border: 0; border-radius: 8px; background: var(--card); color: var(--label);
+  font: 600 15px var(--font); text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper input:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 35%, transparent); }
+.stepper .unit { font-size: 13px; color: var(--label2); margin-right: auto; }
+.jog { display: flex; align-items: center; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.jog .lbl { font-size: 12px; color: var(--label2); margin: 0 4px; }
+.sub { font-size: 12px; color: var(--label2); margin-top: 10px; font-weight: 600; }
+.switch { position: relative; width: 51px; height: 31px; flex: none; display: inline-block; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch i { position: absolute; inset: 0; border-radius: 16px; background: rgba(120,120,128,.32); cursor: pointer; transition: background .25s; }
+.switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
+  background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 3px 1px rgba(0,0,0,.06); transition: transform .25s; }
+.switch input:checked + i { background: var(--green); }
+.switch input:checked + i::after { transform: translateX(20px); }
+.switch input:disabled + i { opacity: .5; cursor: default; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; background: transparent; margin: 8px 0 0; --p: 0%; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, var(--blue) var(--p), rgba(120,120,128,.24) var(--p)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff;
+  margin-top: -12px; box-shadow: 0 .5px 4px rgba(0,0,0,.12), 0 6px 13px rgba(0,0,0,.12); cursor: pointer; }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(120,120,128,.24); }
+input[type=range]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--blue); }
+input[type=range]::-moz-range-thumb { width: 28px; height: 28px; border: 0; border-radius: 50%; background: #fff;
+  box-shadow: 0 .5px 4px rgba(0,0,0,.12), 0 6px 13px rgba(0,0,0,.12); cursor: pointer; }
+.foot { text-align: center; font-size: 12px; color: var(--label3); margin-top: 24px; }
+.muted { color: var(--label3); }
+
+/* ---------- Overclocking view (Mega in Mode 4, owner 2026-11-10): CPU + cooling only ---------- */
+#ocView { display: none; max-width: 2300px; margin: 0 auto; }
+html.ocmode #ocView { display: block; }
+html.ocmode .flow { display: none; }
+#ocSeg { display: none; margin-top: 8px; }
+html.oc4 #ocSeg { display: inline-flex; }
+.ocstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.ocstrip .mbt { background: var(--card); box-shadow: var(--shadow); }
+.ocstrip .mbv { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ocstrip .mbv small { font-size: 14px; font-weight: 600; color: var(--label2); }
+.ocstrip .mbs { font-size: 12px; color: var(--label2); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.ocmain { display: grid; grid-template-columns: minmax(0, .3fr) minmax(0, 1fr); gap: 16px; align-items: start; }   /* CPU drawing ~1/4 */
+@media (max-width: 1300px) { .ocmain { grid-template-columns: minmax(0, .45fr) minmax(0, 1fr); } }
+html.ocmode .ocmain .card { padding: 12px 14px; }
+.ocbody { display: grid; grid-template-columns: minmax(470px, 1fr) minmax(0, 1.35fr); gap: 14px; align-items: start; margin-top: 8px; }
+@media (max-width: 1700px) { .ocbody { grid-template-columns: 1fr; } }
+.ocgrid .ocsub { display: contents; }
+.ocgrid .mbt { padding: 8px 10px 9px; }
+.ocgrid .mbrr { padding: 2px 0; font-size: 12px; }
+.ocgrid .mbrr em { font-size: 10.5px; }
+.octab tr.pc td { background: color-mix(in srgb, var(--indigo) 9%, transparent); }
+.octab tr.pc:nth-child(odd) td { background: color-mix(in srgb, var(--indigo) 17%, transparent); }
+.octab tr.ec td { background: color-mix(in srgb, var(--teal) 7%, transparent); }
+.octab tr.ec:nth-child(odd) td { background: color-mix(in srgb, var(--teal) 14%, transparent); }
+/* fill the window: the page is exactly one screen tall (--oc-h from fitOc) and the view stretches into it */
+html.ocmode body > .wrap { height: var(--oc-h, 100vh); display: flex; flex-direction: column; padding-bottom: 14px; box-sizing: border-box; overflow: hidden; }
+html.ocmode body > .wrap > * { flex: none; }
+html.ocmode .hero { margin-bottom: 14px; }
+html.ocmode #ocView { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; max-width: none; width: 100%; }
+html.ocmode .ocstrip { flex: none; margin-bottom: 14px; }
+html.ocmode .ocmain { flex: 1 1 auto; min-height: 0; align-items: stretch; }
+html.ocmode #ocCpuSlot, html.ocmode #ocCpuSlot > .card { height: 100%; min-height: 0; }
+html.ocmode #ocCpuSlot > .card { display: flex; flex-direction: column; box-sizing: border-box; }
+html.ocmode #ocCpuSlot #cpuSvg { flex: 1 1 auto; min-height: 0; height: 100%; width: 100%; max-height: none; }
+html.ocmode #ocCard { display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; overflow: hidden; }
+html.ocmode .ocbody { flex: 1 1 auto; min-height: 0; align-items: stretch; grid-template-columns: minmax(470px, 1fr) minmax(0, 1.35fr); }
+html.ocmode .octab { height: 100%; }
+html.ocmode .ocgrid { height: 100%; grid-auto-rows: 1fr; align-content: stretch; }
+.octab tr.pc td.k { color: var(--indigo); }
+.octab tr.ec td.k { color: var(--teal); }
+html.ocmode #cpuSvg { max-height: none; }
+.octab { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.octab th { font-size: 10px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .04em; text-align: right; padding: 2px 6px 4px; }
+.octab th:first-child, .octab td:first-child { text-align: left; }
+.octab td { text-align: right; padding: 1.5px 6px; white-space: nowrap; }
+.octab td.k { font-weight: 700; }
+.octab .dim { color: var(--label2); }
+.octab tr.sep td { border-top: 1px solid var(--label3); }
+.ocgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.ocgrid .mbrails { grid-template-columns: 1fr; }
+.ochead { flex-wrap: wrap; }
+.ochead #ocSince { font-weight: 500; }
+.ochead a { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 12px; }
+.ochead .right .mbchip { margin: 0; }
+/* clean page (2026-11-22): readings the standalone reader can't provide are hidden instead of showing "--" */
+body.clean .pcs-empty { display: none !important; }
+.hwbanner { display: none; margin: 10px auto 0; max-width: 1196px; padding: 10px 16px; border-radius: 12px; font-size: 13px;
+  background: color-mix(in srgb, var(--orange) 14%, transparent); color: var(--label); }
+body.full .hwbanner.show { display: block; }
+/* standalone monitor (other PCs, no controller; 2026-11-23) */
+body.mon .mega { display: none !important; }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="shell dash">
+<aside class="rail" id="railNav" data-page="dash"></aside>
+<div class="topbar"><div class="wrap">
+  <div class="brand">PCS</div>
+  <nav class="pnav" id="pnav" data-page="dash"></nav>
+  <div class="conn"><span class="dot" id="cdot"></span><span id="ctext">Connecting…</span></div>
+  <div class="spacer"></div>
+  <button class="svcbtn mega" id="svc" type="button" title="Free the COM port for an Arduino IDE upload">End service</button>
+  <button class="iconbtn" id="theme" title="Appearance">◐</button>
+</div></div>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <div class="eyebrow" id="eyebrow">570X Sub Ambient Cooling Project</div>
+      <h1 id="title">—</h1>
+      <div class="intent mega" id="intent"><span class="idot"></span><b id="intentT">—</b><span id="intentS"></span></div>
+      <div class="hsub" id="subtitle">Waiting for the controller</div>
+    </div>
+    <div class="modebox mega">
+      <div class="seg" id="modeSeg">
+        <button data-p="off">Off</button><button data-p="passive">Passive</button><button data-p="auto">Auto</button><button data-p="bench">Benchmark</button><button data-p="daily" title="Quiet everyday mode: T2 17 °C, P2 40 %, outdoor fans ≤ 45 %, case fans off unless something needs air">Daily</button><button data-p="oc">Overclocking</button><button data-p="extreme" class="alpha">Extreme</button>
+      </div>
+      <div class="seg small" id="ocSeg"><button data-v="cpu">CPU view</button><button data-v="full">Full view</button><button data-v="lock" title="Lay the Overclocking view out at this window size (other sizes only scale it)">Lock size</button></div>
+      <div id="progLine">Programs run on this PC · a case button hands control back to the firmware</div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal"><div class="mbox"><h3 id="mTitle"></h3><p id="mText"></p>
+    <div class="mrow"><button class="btn sec" id="mNo" type="button">Cancel</button><button class="btn" id="mYes" type="button">OK</button></div></div></div>
+  <div class="stip" id="stip"></div>
+  <div class="banner" id="banner"><div class="bi"><span>!</span></div><div id="btext"></div></div>
+
+  <div id="ocView">   <!-- Overclocking view: shown while the Mega runs Mode 4 ("Full view" switches back) -->
+    <div class="ocstrip" id="ocStrip"></div>
+    <div class="ocmain">
+      <div id="ocCpuSlot"></div>
+      <div class="card" id="ocCard">
+        <div class="ctitle ochead"><span class="sw" style="background:var(--indigo)"></span>CPU overclocking<span id="ocSince"></span><a href="#" id="ocReset">reset</a><span class="right" id="ocLim"></span></div>
+        <div class="ocbody">
+          <table class="octab" id="ocCores"></table>
+          <div class="ocgrid"><div id="ocSum" class="ocsub"></div><div id="ocMore" class="ocsub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">  <!-- wide windows: tiles keep their size and fill more columns -->
+  <div class="grid g4 mega">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--pink)"></span>Into the PC<span class="right">cube · Apex</span></div>
+      <div class="big" id="vCube">--</div>
+      <div class="note" id="nCube">&nbsp;</div>
+      <canvas class="spark" id="sCube"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--orange)"></span>Loop return<span class="right">T1</span></div>
+      <div class="big" id="vT1">--</div>
+      <div class="note" id="nT1">&nbsp;</div>
+      <canvas class="spark" id="sT1"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--blue)"></span>Mixing valve<span class="right">T2</span></div>
+      <div class="big" id="vT2">--</div>
+      <div class="note" id="nT2">&nbsp;</div>
+      <canvas class="spark" id="sT2"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--teal)"></span>Outdoor radiator<span class="right">T3</span></div>
+      <div class="big" id="vT3">--</div>
+      <div class="note" id="nT3">&nbsp;</div>
+      <canvas class="spark" id="sT3"></canvas>
+    </div>
+  </div>
+
+  <div class="grid g2 air mega">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--red)"></span>Case air<span class="right">A GPU · B CPU · SHT45</span></div>
+      <div class="trio">
+        <div><div class="mid" id="vCaseT">--</div><div class="note">Temperature</div></div>
+        <div><div class="mid" id="vCaseRH">--</div><div class="note">Humidity</div></div>
+        <div><div class="mid" id="vCaseDP">--</div><div class="note">Dew point</div></div>
+      </div>
+      <div class="note" id="nCase" style="margin-top:12px">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--green)"></span>Room air<span class="right">SHT45</span></div>
+      <div class="trio">
+        <div><div class="mid" id="vRoomT">--</div><div class="note">Temperature</div></div>
+        <div><div class="mid" id="vRoomRH">--</div><div class="note">Humidity</div></div>
+        <div><div class="mid" id="vRoomDP">--</div><div class="note">Dew point</div></div>
+      </div>
+      <div class="note" id="nRoom" style="margin-top:12px">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="grid g3" id="pcGrid">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--indigo)"></span>CPU<span class="right" id="pcSrc">HWiNFO</span></div>
+      <div class="big" id="vCpuT">--</div>
+      <div class="note" id="nCpu">&nbsp;</div>
+      <canvas class="spark" id="sCpu"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--green)"></span>GPU</div>
+      <div class="big" id="vGpuT">--</div>
+      <div class="note" id="nGpu">&nbsp;</div>
+      <canvas class="spark" id="sGpu"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--red)"></span><span id="heatTtl">Heat into the loop</span><span class="right">CPU + GPU</span></div>
+      <div class="big" id="vHeat">--</div>
+      <div class="rows" style="margin-top:6px">
+        <div class="row mega"><span class="k">GPU 16-pin · slot (real)</span><span class="v" id="rGpuRails">--</span></div>
+        <div class="row"><span class="k">VRM · DIMM</span><span class="v" id="rTsen">--</span></div>
+        <div class="row mega"><span class="k">W_PUMP+ · AIO pump</span><span class="v" id="rPumps">--</span></div>
+        <div class="row mega"><span class="k">CPU fan · Chassis 1 · 2</span><span class="v" id="rCfans">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g2" id="hwGrid">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--indigo)"></span>CPU · <span id="cpuName">Core Ultra 7 270K Plus</span><span class="right" id="cpuHwSrc">HWiNFO</span></div>
+      <svg class="pcbsvg" id="cpuSvg" viewBox="0 0 476 500" role="img" aria-label="CPU package with per-core temperature, clock, voltage and load"></svg>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--green)"></span>GPU · <span id="gpuName">RTX 4070 Ti Super</span><span class="right" id="gpuNote">16-pin shunt-corrected</span></div>
+      <svg class="pcbsvg" id="gpuSvg" viewBox="0 0 600 392" role="img" aria-label="GPU board with die, memory chip temperatures, power rails"></svg>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--blue)"></span><span id="mbTitle">Motherboard</span><span class="right mega">Nuvoton NCT6701D · EC · PCH</span></div>
+      <div class="mbwrap"><svg class="mbboard" id="mbSvg" viewBox="0 0 652 690" role="img" aria-label="ROG Maximus Z890 Apex with live temperatures, power flow, fan and pump headers"></svg><div id="mbSide"></div><div id="mbOc"></div></div>
+    </div>
+  </div>
+
+  <div class="grid g2 natural mega">
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--purple)"></span>Distance to dew point<span class="right" id="mSrc">T2 − DP</span></div>
+      <div class="big" id="vMargin">--</div>
+      <div class="mbar"><i id="mbar" style="width:0"></i></div>
+      <div class="mscale"><span style="left:0">0</span><span style="left:10%">2</span><span style="left:25%">5</span><span style="left:50%">10</span><span style="right:0">20 °C</span></div>
+      <div class="rows">
+        <div class="row"><span class="k">Into the PC (cube) − DP</span><span class="v" id="rCubeDP">--</span></div>
+        <div class="row"><span class="k">Dew point (highest valid)</span><span class="v" id="rDP">--</span></div>
+        <div class="row"><span class="k">Setpoint</span><span class="v" id="rTset">--</span></div>
+        <div class="row"><span class="k">Case A · Case B · Room</span><span class="v" id="rDPs">--</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><span class="sw" style="background:var(--blue)"></span>Valve V2<span class="right" id="v2state">--</span></div>
+      <div class="valve">
+        <svg class="ring" viewBox="0 0 132 132">
+          <circle class="trk" cx="66" cy="66" r="56" fill="none" stroke-width="12"/>
+          <circle class="val" id="ring" cx="66" cy="66" r="56" fill="none" stroke-width="12" stroke-linecap="round"
+                  transform="rotate(-90 66 66)" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+          <text x="66" y="66" text-anchor="middle" font-size="28" font-weight="600" id="ringv">--</text>
+          <text x="66" y="86" text-anchor="middle" font-size="11" style="fill:var(--label2)">outdoor</text>
+        </svg>
+        <div class="rows">
+          <div class="row"><span class="k">Angle</span><span class="v" id="rDeg">--</span></div>
+          <div class="row"><span class="k">Port opening</span><span class="v" id="rMm">--</span></div>
+          <div class="row"><span class="k">Outdoor T estimate</span><span class="v" id="rTout">--</span></div>
+          <div class="row"><span class="k">Cooling potential</span><span class="v" id="rW">--</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g4 mega">
+    <div class="card">
+      <div class="ctitle">Fans</div>
+      <div class="mid" id="vFan">--</div>
+      <div class="note" id="nFan">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Pump P2</div>
+      <div class="mid" id="vPump">--</div>
+      <div class="note" id="nPump">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">12 V and fuses</div>
+      <div class="mid" id="vFuse">--</div>
+      <div class="note" id="nFuse">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Health</div>
+      <div class="mid" id="vHealth">--</div>
+      <div class="note" id="nHealth">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="card mega" style="margin-bottom:16px">
+    <div class="ctlhead">
+      <h2>Controls</h2>
+      <span class="pill n" id="manPill">Automatic</span>
+      <span class="grow"></span>
+      <span class="hint" id="manHint"></span>
+      <button class="btn" id="manBtn" type="button">Manual control</button>
+    </div>
+    <div class="ctlgrid">
+      <div class="ctlbox" id="boxDisp">
+        <div class="ctlrow"><span class="k">Case display</span><label class="switch"><input type="checkbox" id="swDisp"><i></i></label></div>
+        <div class="note" id="nDisp">Blanks the screen; the backlight stays lit (wired to 3V3)</div>
+      </div>
+      <div class="ctlbox man locked">
+        <div class="ctlrow"><span class="k">Fans</span><span class="v" id="lFan">--</span></div>
+        <input type="range" id="slFan" min="0" max="100" step="1" value="10">
+        <div class="ticks"><span>0</span><span>50</span><span>100 %</span></div>
+        <div class="stepper" data-sl="slFan"><button data-d="-5">−5</button><button data-d="-1">−1</button><input type="number" id="nslFan" min="0" max="100" step="1"><span class="unit">%</span><button data-d="1">+1</button><button data-d="5">+5</button></div>
+      </div>
+      <div class="ctlbox man locked">
+        <div class="ctlrow"><span class="k">Pump P2</span><label class="switch"><input type="checkbox" id="swPump"><i></i></label></div>
+        <input type="range" id="slPump" min="5" max="100" step="1" value="80">
+        <div class="ticks"><span>5</span><span id="lPump">80 %</span><span>100 %</span></div>
+        <div class="stepper" data-sl="slPump"><button data-d="-5">−5</button><button data-d="-1">−1</button><input type="number" id="nslPump" min="5" max="100" step="1"><span class="unit">%</span><button data-d="1">+1</button><button data-d="5">+5</button></div>
+      </div>
+      <div class="ctlbox man locked">
+        <div class="ctlrow"><span class="k">Valve V2</span><span class="v" id="lV2">--</span></div>
+        <input type="range" id="slV2" min="0" max="100" step="1" value="0">
+        <div class="ticks"><span>Outdoor shut</span><span>50 %</span><span>All open</span></div>
+        <div class="stepper" data-sl="slV2"><button data-d="-5">−5</button><button data-d="-1">−1</button><input type="number" id="nslV2" min="0" max="100" step="1"><span class="unit">% out</span><button data-d="1">+1</button><button data-d="5">+5</button></div>
+        <div class="stepper" data-deg="1"><button data-d="-5">−5</button><button data-d="-1">−1</button><input type="number" id="nDeg" min="0" max="90" step="0.5"><span class="unit">°</span><button data-d="1">+1</button><button data-d="5">+5</button></div>
+        <div class="sub">Jog (raw run, ms)</div>
+        <div class="jog"><button data-c="-1000">◀ 1000</button><button data-c="-250">◀ 250</button><button data-c="-50">◀ 50</button><span class="lbl">close · open</span><button data-c="+50">50 ▶</button><button data-c="+250">250 ▶</button><button data-c="+1000">1000 ▶</button></div>
+        <div class="chips"><button data-c="k">Park (bypass)</button><button data-c="s">Stop</button><button data-c="o100%">All open</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mega" style="margin-bottom:16px">
+    <div class="chart-head">
+      <h2>Temperatures</h2>
+      <div class="seg small" id="winSeg">
+        <button data-w="300">5 min</button><button data-w="1800" class="on">30 min</button><button data-w="7200">2 h</button><button data-w="14400">4 h</button>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="chartbox"><canvas id="chart"></canvas><div class="tip" id="tip"></div></div>
+  </div>
+
+  <div class="grid g2 mega">
+    <div class="card">
+      <div class="ctitle">Faults and alarms</div>
+      <div class="rows" id="health"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Console<span class="right muted" id="fw"></span></div>
+      <div class="log" id="log"></div>
+      <form class="cmd" id="cmdf" autocomplete="off">
+        <input id="cmd" placeholder="Command, e.g. ?  or  Rad=-15" spellcheck="false">
+        <button class="btn" type="submit">Send</button>
+      </form>
+      <div class="chips" id="conChips">
+        <button data-c="?">Status ?</button><button data-c="clr">Clear SIM</button><button data-c="rc">Clear reset counters</button><button data-c="h">Help</button>
+      </div>
+    </div>
+  </div>
+  </div>  <!-- /flow -->
+</div>
+
+<div class="hwbanner" id="hwbanner">HWiNFO isn't sharing data: the readings only it has (NGU / D2D clocks, VR VCC SVID,
+  1.x V rails, memory timings, VRM out V / A, Vcore latch) show "--". Start HWiNFO with Settings &rarr; Shared Memory Support on
+  (the free version stops sharing after 12 h). Everything else comes from the PCS sensor reader.</div>
+<script>
+// Two pages (2026-11-22): "/" = clean (no HWiNFO needed: rows without a reading are hidden), "/full" = everything,
+// filled by HWiNFO while it runs (the server merges it in; the reader stays the first source).
+const FULL = location.pathname.startsWith("/full");
+document.body.classList.add(FULL ? "full" : "clean");
+document.getElementById("pnav").dataset.page = FULL ? "full" : "dash";
+document.getElementById("railNav").dataset.page = FULL ? "full" : "dash";
+// the icon rail takes the left 84 px (none below 720 px, where it becomes a bottom bar)
+const railW = () => (document.body.classList.contains("shell") && innerWidth > 720) ? 84 : 0;
+const pageW = () => document.documentElement.clientWidth - railW();
+(function () {
+  const EMPTY = new Set(["--", "–", "—", "", "-- %", "-- °C", "-- V", "-- W", "-- MHz"]);
+  let queued = false;
+  function sweep() {
+    queued = false;
+    if (FULL && !document.body.classList.contains("mon")) return;   // monitor build: empty rows go on both pages
+    const empty = t => { t = t.replace(/[≈\s]/g, " ").trim(); return EMPTY.has(t) || /^--( |$)/.test(t); };
+    document.querySelectorAll(".mbrr").forEach(el => {
+      const b = el.querySelector("b");
+      el.classList.toggle("pcs-empty", !!b && empty(b.textContent));
+    });
+    document.querySelectorAll(".mbt").forEach(el => {          // single-value tiles ("CPU socket --")
+      const v = el.querySelector(":scope > .mbv");
+      if (!v) return;
+      const k = el.querySelector(":scope > .mbk");             // hidden only when nothing in it has a number
+      const body = el.textContent.replace(k ? k.textContent : "", "");
+      el.classList.toggle("pcs-empty", empty(v.textContent) && !/\d/.test(body));
+    });
+    document.querySelectorAll(".mbchip").forEach(el => el.classList.toggle("pcs-empty", /--/.test(el.textContent)));
+    // a block whose rows are all hidden goes too (its heading would stand alone)
+    document.querySelectorAll(".mbt, .mbgrp").forEach(el => {
+      const rows = el.querySelectorAll(".mbrr, .mbchip");
+      if (rows.length && !el.querySelector(":scope > .mbv"))   // blocks of rows only; tiles were decided above
+        el.classList.toggle("pcs-empty", [...rows].every(r => r.classList.contains("pcs-empty")));
+    });
+  }
+  new MutationObserver(() => { if (!queued) { queued = true; setTimeout(sweep, 60); } })   // not rAF: paused in background tabs
+    .observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+function hwBanner(pc) {
+  const el = document.getElementById("hwbanner");
+  if (el) el.classList.toggle("show", FULL && !document.body.classList.contains("mon") && !(pc && String(pc.src || "").includes("HWiNFO")));
+}
+"use strict";
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const FAULTS = ["NTC T1", "NTC T2", "NTC T3", "No dew point", "Mixing too low (T2 < DP+1)", "Return too low (T1 < DP+2)",
+  "Pump fuse S1", "Valve fuse S3", "Pump P2 stall"];
+const ALARMS = ["Fan fuse S2", "Fan 1 stall", "Fan 2 stall", "Case sensor A", "Case sensor B", "Room sensor",
+  "Case dew points A/B differ > 3 °C", "Max mode degraded", "Return near dew (P2 off)", "Forced bypass (outdoor too warm)",
+  "Case vs room dew point > 10 °C", "Cube near dew (cube < DP + 2)", "SHT heater was on (switched off)"];
+const MODES = {1: "Off", 2: "Load cap", 3: "Max", 4: "Overclocking", 5: "Daily"};
+const SERIES = [
+  {k: "T1", name: "Return T1", c: "--orange", on: true},
+  {k: "T2", name: "Mixing T2", c: "--blue", on: true},
+  {k: "Tcube", name: "Into PC (cube)", c: "--pink", on: true},
+  {k: "T3", name: "Radiator T3", c: "--teal", on: true},
+  {k: "DP", name: "Dew point", c: "--purple", on: true},
+  {k: "Tset", name: "Setpoint", c: "--gray", on: true, dash: true},
+  {k: "Tout", name: "T out", c: "--indigo", on: false},
+  {k: "Troom", name: "Room", c: "--green", on: false},
+  {k: "Tcpu", name: "CPU avg (P-cores)", c: "--red", on: true},
+];
+let rows = [], info = {}, win = 1800, lastRowAt = 0, hover = null;
+
+const f1 = v => v == null ? "--" : v.toFixed(1);
+const deg = v => v == null ? "--" : `${v.toFixed(1)}<span class="u">°</span>`;
+const bits = (m, names) => names.filter((_, i) => m & (1 << i));
+
+function stateText(r) {
+  if (!r) return ["—", "Waiting for the controller"];
+  if (prog && (prog.p === "auto" || prog.p === "bench" || prog.p === "passive"))
+    return [prog.name, `${prog.phase}${prog.note ? " · " + prog.note : ""}`];
+  const m = MODES[r.mode] || "?";
+  switch (r.state) {
+    case "NO12V": return ["PC off", "No 12 V. Outputs held off"];
+    case "HOME": return ["Homing valve", "Parking V2 at bypass"];
+    case "IDLE": return r.mode === 1 ? ["Branch off", "Mode 1 · outdoor loop parked"] : ["Sleeping", `Mode ${r.mode} · ${m} · waiting for heat`];
+    case "START": return ["Starting", `Mode ${r.mode} · ${m}`];
+    case "RUN": return ["Cooling", `Mode ${r.mode} · ${m} · regulating to ${f1(r.Tset)} °C`];
+    case "STOP": return ["Stopping", `Mode ${r.mode} · ${m}`];
+    case "SAFE": return ["Fault", "Safe state. Press a mode button once the cause is gone"];
+    case "TEST": return ["Test mode", "Serial test mode · outputs set by hand"];
+  }
+  return [r.state, ""];
+}
+
+// ---------- cooling intent (owner 2026-11-11): cooling down / stabilizing / maintaining / backing off ... ----------
+// Target = the PC program's T2 setpoint (Auto / Benchmark) or the firmware setpoint (Modes 2-4). Trend = T2 slope over the
+// last 60 s of live rows. Bands: within ±0.5 °C and flat (< 0.3 °C/min) = maintaining; within ±1.5 = stabilizing;
+// above = cooling down; more than 1 °C under = backing off (outdoor port shut, fans at minimum).
+function coolIntent(r) {
+  if (!r) return ["", "—", ""];
+  const live = rows.filter(x => !x.hist && x.t >= r.t - 60 && x.T2 != null);
+  const slope = live.length > 10 ? (live[live.length - 1].T2 - live[0].T2) / Math.max(1, live[live.length - 1].t - live[0].t) * 60 : null;
+  const sl = slope == null ? "" : ` · ${slope >= 0 ? "+" : ""}${slope.toFixed(1)} °C/min`;
+  if (r.state === "SAFE") return ["bad", "Fault", "safe state, branch off"];
+  if (r.state === "NO12V") return ["", "Standby", "PC off, no 12 V"];
+  if (r.state === "HOME") return ["stab", "Homing valve", "V2 parking at bypass"];
+  if (r.state === "START") return ["cool", "Starting", "pump on, valve opening"];
+  if (r.state === "STOP") return ["back", "Stopping", "valve to bypass, pump off"];
+  if (prog && prog.p === "passive") return ["hold", "Passive", prog.p1_bios ? "branch off · PC fans follow the CPU" : "branch off · PC fans and P1 follow the CPU"];
+  const progRun = prog && (prog.p === "auto" || prog.p === "bench") && prog.t2set != null;
+  if (r.state === "TEST" && !progRun) return ["", "Manual", "outputs set by hand"];
+  if (r.mode === 1 && !progRun) return ["", "Off", "outdoor branch parked"];
+  if (r.state === "IDLE") return ["", "Sleeping", "waiting for heat"];
+  const target = progRun ? prog.t2set : r.Tset;
+  if (target == null || r.T2 == null) return ["", "—", ""];
+  const err = r.T2 - target;
+  const dew = r.DP != null && Math.abs(target - (r.DP + 4)) < 0.05 ? " · dew-limited" : "";
+  const tg = ` toward ${target.toFixed(1)} °C${dew}`;
+  if (err > 1.5) return ["cool", "Cooling down", `T2 ${err.toFixed(1)} °C over${tg}${sl}`];
+  if (err < -1.0) return ["back", "Backing off", `T2 ${(-err).toFixed(1)} °C under${tg}${sl}`];
+  if (Math.abs(err) <= 0.5 && (slope == null || Math.abs(slope) < 0.3)) return ["hold", "Maintaining", `T2 ${r.T2.toFixed(1)} °C at ${target.toFixed(1)}${dew}`];
+  return ["stab", "Stabilizing", `T2 ${err >= 0 ? "+" : ""}${err.toFixed(1)} °C${tg}${sl}`];
+}
+function renderIntent(r) {
+  const [cls, t, s] = coolIntent(r);
+  $("intent").className = "intent mega " + cls;          // keep .mega: hidden in the monitor build
+  $("intentT").textContent = t;
+  $("intentS").textContent = s;
+  return [cls, t, s];
+}
+
+function render() {
+  const r = rows[rows.length - 1];
+  const [t, s] = stateText(r);
+  $("title").textContent = t;
+  $("subtitle").textContent = s;
+  renderIntent(r);
+  renderProg();
+  if (!r) return;
+
+  for (const k of ["T1", "T2", "T3"]) $("v" + k).innerHTML = deg(r[k]);
+  $("nT1").textContent = r.T1 != null && r.Tout != null ? `${(r.T1 - r.Tout).toFixed(1)} °C above outdoor` : " ";
+  $("nT2").textContent = r.Tset != null && r.T2 != null ? `${r.T2 - r.Tset >= 0 ? "+" : ""}${(r.T2 - r.Tset).toFixed(1)} °C vs setpoint` : " ";
+  $("nT3").textContent = r.state === "RUN" ? "Flowing" : "Stagnant";
+  spark("sT1", "T1", "--orange"); spark("sT2", "T2", "--blue"); spark("sT3", "T3", "--teal");
+  renderCube();
+
+  // case = highest valid of A/B per value (as the case display); room = SHT30
+  const hi2 = (a, b) => a == null ? b : b == null ? a : Math.max(a, b);
+  const pct = v => v == null ? "--" : `${Math.round(v)}<span class="u">%</span>`;
+  const newFw = "T_A" in r;   // the columns exist (FW 0.9.7f+); empty values = sensors invalid, not old firmware
+  $("vCaseT").innerHTML = deg(hi2(r.T_A, r.T_B));
+  $("vCaseRH").innerHTML = pct(hi2(r.RH_A, r.RH_B));
+  $("vCaseDP").innerHTML = deg(hi2(r.DP_A, r.DP_B));
+  $("nCase").textContent = !newFw ? "Needs FW 0.9.7f for temperature and humidity" :
+    r.T_A == null && r.T_B == null ? "No valid case sensor (GPU / CPU invalid)" :
+    `GPU ${f1(r.T_A)} °C ${r.RH_A == null ? "--" : Math.round(r.RH_A)} % · CPU ${f1(r.T_B)} °C ${r.RH_B == null ? "--" : Math.round(r.RH_B)} %`;
+  $("vRoomT").innerHTML = deg(r.Troom);
+  $("vRoomRH").innerHTML = pct(r.RH_R);
+  $("vRoomDP").innerHTML = deg(r.DP_R);
+  const cdp = hi2(r.DP_A, r.DP_B);
+  $("nRoom").textContent = cdp != null && r.DP_R != null ? `Case dew point ${cdp - r.DP_R >= 0 ? "+" : ""}${(cdp - r.DP_R).toFixed(1)} °C vs room` : " ";
+
+  // P2 off: T2 is standing water in the box, not what the PC gets -> grey it out; the distance to dew then uses the
+  // cube (Apex T_Sensor, coolant into the PC). Older firmware without "pen": pump % = 0 means off.
+  const p2off = r.pen != null ? r.pen === 0 : !r.pump;
+  const t2card = $("vT2").closest(".card");
+  t2card.classList.toggle("dim", p2off);
+  t2card.dataset.dim = "P2 off · not flowing";
+  const pv = pc.v || {}, cubeNow = (pc.status === "ok" || pc.status === "demo") && pv.t_sensor ? pv.t_sensor.v : r.Tcube;
+  const mgBase = p2off ? cubeNow : r.T2;
+  $("mSrc").textContent = p2off ? "cube − DP (P2 off)" : "T2 − DP";
+  const mg = mgBase != null && r.DP != null ? mgBase - r.DP : null;
+  $("vMargin").innerHTML = mg == null ? "--" : `${mg >= 0 ? "+" : ""}${mg.toFixed(1)}<span class="u">°</span>`;
+  const bar = $("mbar");
+  bar.style.width = mg == null ? "0" : Math.max(2, Math.min(100, mg / 20 * 100)) + "%";
+  bar.style.background = mg == null ? "var(--gray)" : mg < 2 ? "var(--red)" : mg < 5 ? "var(--orange)" : "var(--green)";
+  $("rDP").textContent = r.DP == null ? "--" : `${f1(r.DP)} °C`;
+  $("rTset").textContent = r.Tset == null || r.mode === 1 ? "—" : `${f1(r.Tset)} °C`;
+  $("rDPs").textContent = `${f1(r.DP_A)} · ${f1(r.DP_B)} · ${f1(r.DP_R)}`;
+
+  renderControls(r);
+
+  const share = r.V2out;
+  $("ringv").textContent = share == null ? "--" : `${Math.round(share)}%`;
+  $("ring").style.strokeDashoffset = 351.86 * (1 - Math.max(0, Math.min(100, share || 0)) / 100);
+  $("rDeg").textContent = r.V2deg == null ? "not homed" : `${f1(r.V2deg)}°`;
+  $("rMm").textContent = r.V2mm == null ? "--" : `${f1(r.V2mm)} mm`;
+  $("rTout").textContent = r.Tout == null ? "settling" : `${f1(r.Tout)} °C`;
+  const w = r.T1 != null && r.Tout != null ? Math.max(0, 25 * (r.T1 - r.Tout)) : null;
+  $("rW").textContent = w == null ? "--" : `≈ ${Math.round(w)} W`;
+  $("v2state").textContent = r.V2deg == null ? "Not homed" : r.V2deg <= 23.3 ? "Bypass" : r.V2deg >= 89.5 ? "All open" : "Mixing";
+
+  $("vFan").innerHTML = `${r.fan}<span class="u">%</span>`;
+  $("nFan").textContent = r.rpmF2 == null ? "--" : `${r.rpmF2} rpm (fan 2)` + (r.rpmF1 != null ? ` · ${r.rpmF1} rpm (fan 1)` : "");
+  $("vPump").innerHTML = r.pump ? `${r.pump}<span class="u">%</span>` : "Off";
+  $("nPump").textContent = r.pump ? `${r.rpmP2} rpm` : "PEN off";
+
+  const fz = r.fuses & 7;
+  $("vFuse").textContent = fz === 7 ? "OK" : fz === 0 ? "No 12 V" : "Fuse out";
+  $("vFuse").style.color = fz === 7 ? "" : fz === 0 ? "var(--label2)" : "var(--red)";
+  $("nFuse").textContent = ["Pump", "Fans", "Valve"].map((n, i) => `${n} ${fz & (1 << i) ? "✓" : "✕"}`).join(" · ");
+
+  const F = bits(r.faults, FAULTS), A = bits(r.alarms, ALARMS);
+  $("vHealth").textContent = F.length ? `${F.length} fault${F.length > 1 ? "s" : ""}` : A.length ? `${A.length} alarm${A.length > 1 ? "s" : ""}` : "All good";
+  $("vHealth").style.color = F.length ? "var(--red)" : A.length ? "var(--orange)" : "var(--green)";
+  $("nHealth").textContent = F[0] || A[0] || "No faults, no alarms";
+
+  const h = [];
+  FAULTS.forEach((n, i) => { if (r.faults & (1 << i)) h.push(`<div class="row"><span class="k">${n}</span><span class="pill r">Fault</span></div>`); });
+  ALARMS.forEach((n, i) => { if (r.alarms & (1 << i)) h.push(`<div class="row"><span class="k">${n}</span><span class="pill o">Alarm</span></div>`); });
+  if (!h.length) h.push(`<div class="row"><span class="k">Everything nominal</span><span class="pill g">OK</span></div>`);
+  h.push(`<div class="row"><span class="k">Bit masks</span><span class="v">faults 0x${r.faults.toString(16)} · alarms 0x${r.alarms.toString(16)}</span></div>`);
+  $("health").innerHTML = h.join("");
+
+  const bn = $("banner");
+  bn.className = "banner";
+  if (F.length) { bn.classList.add("show", "fault"); $("btext").textContent = F.join(" · "); }
+  else if (r.state === "NO12V") { bn.classList.add("show", "info"); $("btext").textContent = "No 12 V: the PC is off or the supply is missing"; }
+  else if (A.length) { bn.classList.add("show", "alarm"); $("btext").textContent = A.join(" · "); }
+  drawChart();
+  ocRender();
+}
+
+// End / Start service: frees the COM port for an Arduino IDE upload, then takes it back
+$("svc").onclick = async () => {
+  const end = !info.released;
+  const ok = end
+    ? await ask("End service?", "Are you sure? This closes the COM port so the Arduino IDE can upload. A running PC program " +
+        "(Auto / Benchmark / Manual) stops first: P2 off, V2 parks. A firmware mode such as Overclocking keeps running on the " +
+        "Mega (and resumes by itself after the upload). The page and the PC fans keep running on their defaults, P1 on its BIOS curve.", "End service")
+    : await ask("Start service?", "Are you sure? Close the Arduino IDE Serial Monitor first. The dashboard reopens the COM port " +
+        "(DTR off, no reset) and restores the program that was running before.", "Start service");
+  if (!ok) return;
+  try {
+    const res = await fetch("/service", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({on: !end})});
+    const j = await res.json();
+    info = Object.assign(info, j.info); connRender();
+  } catch (e) {}
+};
+function connRender() {
+  if (info.standalone) {                 // monitor only: no controller, the PC sensors are the live data
+    if (!document.body.classList.contains("mon")) {
+      document.body.classList.add("mon");
+      $("eyebrow").textContent = "PCS monitor";
+      $("heatTtl").textContent = "Heat output";
+    }
+    const fresh = pc && pc.status === "ok";
+    $("cdot").className = "dot " + (fresh ? "ok" : "bad");
+    if (window.pcsLive) pcsLive(fresh);
+    $("ctext").textContent = fresh ? "Monitor · live" : "Monitor · " + (pc && pc.status ? pc.status : "no sensor data");
+    $("title").textContent = (pc && pc.d && pc.d.cpu && pc.d.cpu.name) || "This PC";
+    $("subtitle").textContent = "Live sensors · " + ((pc && pc.src) || "sensor reader");
+    return;
+  }
+  const stale = Date.now() - lastRowAt > 3500;
+  const d = $("cdot");
+  d.className = "dot " + (info.released ? "warn" : !info.connected ? "bad" : stale ? "warn" : "ok");
+  if (window.pcsLive) pcsLive(info.connected && !stale && !info.released);
+  $("ctext").textContent = info.released ? "Service ended · COM port free for flashing" : !info.connected ? (info.error || "Disconnected") :
+    `${info.port}${info.demo ? " (demo)" : ""}` + (stale ? " · no data" : " · live");
+  const sb = $("svc");
+  sb.textContent = info.released ? "Start service" : "End service";
+  sb.classList.toggle("start", !!info.released);
+  $("fw").textContent = info.fw ? info.fw.replace("PCS controller ", "") : "";
+}
+
+// ---------- controls ----------
+// Manual control = the firmware's serial test mode (t / x): only from Mode 1 at idle, 12 V present, no fault.
+// Fans f<n>, pump p<n> (p0 = off), valve o<n>% (outdoor share, needs homed), k park, s stop. Faults stay armed.
+const held = {};
+const pendSend = {};                   // merged stepper / slider commands waiting to go out                       // control -> time the user last touched it (no snap-back while it settles)
+const touch = id => { held[id] = Date.now(); };
+const free = id => !held[id] || Date.now() - held[id] > 4000;
+function setRange(el, v) {
+  el.value = v; el.style.setProperty("--p", ((v - el.min) / (el.max - el.min) * 100) + "%");
+  const n = $("n" + el.id);
+  if (n && document.activeElement !== n) n.value = Math.round(v);
+}
+function renderControls(r) {
+  const progRun = prog && (prog.p === "auto" || prog.p === "bench");
+  const test = r.state === "TEST" && !progRun;     // a program drives test mode itself: sliders stay locked
+  const canEnter = r.mode === 1 && r.state === "IDLE" && !r.faults;
+  const pill = $("manPill"), btn = $("manBtn");
+  pill.textContent = test ? "Manual" : "Automatic";
+  pill.className = "pill " + (test ? "o" : "n");
+  btn.disabled = false;
+  if (progRun) { btn.textContent = "Manual control"; btn.className = "btn"; btn.dataset.c = "t";
+    pill.textContent = prog.name; pill.className = "pill n";
+    $("manHint").textContent = "The program drives fans, P2 and V2 · Manual takes over"; }
+  else if (test) { btn.textContent = "Back to automatic"; btn.className = "btn warn"; btn.dataset.c = "x";
+    $("manHint").textContent = "Faults stay armed · the Mega parks 10 s after the dashboard stops (heartbeat)"; }
+  else if (canEnter) { btn.textContent = "Manual control"; btn.className = "btn"; btn.dataset.c = "t";
+    $("manHint").textContent = ""; }
+  else if (r.state === "NO12V" || r.faults) { btn.textContent = "Manual control"; btn.className = "btn"; btn.disabled = true;
+    $("manHint").textContent = r.faults ? "Clear the fault first (Off clears it once the cause is gone)" : "Needs 12 V (PC on)"; }
+  else { btn.textContent = "Switch to Off"; btn.className = "btn sec"; btn.dataset.c = "m1";
+    $("manHint").textContent = r.mode === 1 ? "Waiting for idle" : "Manual control works from Mode 1 (Off)"; }
+  document.querySelectorAll(".ctlbox.man").forEach(b => b.classList.toggle("locked", !test));
+
+  const sw = $("swDisp");
+  sw.disabled = r.disp == null;
+  if (free("swDisp")) sw.checked = r.disp !== 0;
+  $("nDisp").textContent = r.disp == null ? "Needs FW 0.9.7g" : r.disp ? "On · backlight is always lit (wired to 3V3)" : "Off · screen blanked, backlight still lit";
+
+  if (free("slFan")) { setRange($("slFan"), r.fan); $("lFan").textContent = `${r.fan} %` + (r.rpmF2 != null ? ` · ${r.rpmF2} rpm` : ""); }
+  // P2 on/off: the firmware's own PEN state (CSV "pen", FW 0.9.9c). Never from the tach: P1 windmills P2's impeller
+  // when it's off. Older firmware: the last command we sent, else pump % > 0.
+  if (!test) pumpCmdOn = null;
+  const p2on = r.pen != null ? r.pen === 1 : pumpCmdOn != null ? pumpCmdOn : r.pump > 0;
+  if (free("swPump")) $("swPump").checked = p2on;
+  if (free("slPump") && r.pump != null && p2on) setRange($("slPump"), r.pump);
+  if (free("slPump")) $("lPump").textContent = p2on ? `${r.pump} % · ${r.rpmP2} rpm` : `off · ${r.rpmP2} rpm (windmill)`;
+  if (free("slV2")) { setRange($("slV2"), Math.round(r.V2out || 0));
+    $("lV2").textContent = r.V2deg == null ? "not homed" : `${Math.round(r.V2out || 0)} % · ${f1(r.V2deg)}°`; }
+  $("slV2").disabled = r.V2deg == null;
+  const nd = $("nDeg");
+  if (free("deg") && document.activeElement !== nd) nd.value = r.V2deg == null ? "" : r.V2deg.toFixed(1);
+}
+$("manBtn").onclick = async e => {
+  const c = e.currentTarget.dataset.c;
+  if (c === "x") return setProg("off");
+  if (c === "t" || c === "m1") {
+    if (!(prog && prog.link && prog.link.ok)) {
+      const go = await ask("Running blind",
+        `The PC link isn't valid (${(prog && prog.link && prog.link.why) || "unknown"}). In manual control nothing ` +
+        "watches the coolant going into the PC (cube) against the dew point: only the Mega's own T2 / T1 trips stay armed. Continue?",
+        "Run blind");
+      if (!go) return;
+    }
+    return setProg("manual");
+  }
+};
+$("swDisp").onchange = e => { touch("swDisp"); send(e.target.checked ? "scr1" : "scr0"); };
+for (const id of ["slFan", "slPump", "slV2"]) {
+  const el = $(id);
+  el.oninput = () => { touch(id); setRange(el, +el.value);
+    if (id === "slFan") $("lFan").textContent = `${el.value} %`;
+    if (id === "slPump") $("lPump").textContent = `${el.value} %`;
+    if (id === "slV2") $("lV2").textContent = `to ${el.value} %`; };
+}
+$("slFan").onchange = e => { touch("slFan"); send("f" + e.target.value); };
+let pumpCmdOn = null;                  // last P2 on/off we sent (null = unknown)
+function pumpSend(cmd) { pumpCmdOn = cmd !== "p0"; send(cmd); }
+$("slPump").onchange = e => { touch("slPump"); if ($("swPump").checked) pumpSend("pd" + e.target.value); };
+$("swPump").onchange = e => {
+  touch("swPump"); touch("slPump");
+  clearTimeout(pendSend.slPump);       // a merged slider / stepper command must not turn it back on after "off"
+  pumpSend(e.target.checked ? "pd" + $("slPump").value : "p0");
+};
+$("slV2").onchange = e => { touch("slV2"); send("o" + e.target.value + "%"); };
+// Fine control: steppers (±1 / ±5 and a number box) for fans, pump, valve %, valve angle; quick clicks are merged
+// into one command 350 ms after the last one. Jog buttons send raw timed runs (+ms open / -ms close).
+const CMD = {slFan: v => "f" + v, slPump: v => ($("swPump").checked ? "pd" + v : null), slV2: v => "o" + v + "%"};
+function sendLater(key, cmd) {        // cmd: a string, or a function evaluated when it fires
+  clearTimeout(pendSend[key]);
+  pendSend[key] = setTimeout(() => {
+    const c = typeof cmd === "function" ? cmd() : cmd;
+    if (!c) return;
+    if (key === "slPump") pumpSend(c); else send(c);
+  }, 350);
+}
+function applyLevel(id, v) {
+  const el = $(id);
+  v = Math.max(+el.min, Math.min(+el.max, Math.round(v)));
+  touch(id); setRange(el, v); el.oninput();
+  sendLater(id, () => CMD[id](v));     // decided when it fires (pump may have been switched off meanwhile)
+}
+function applyDeg(v) {
+  v = Math.max(0, Math.min(90, Math.round(v * 2) / 2));
+  touch("deg"); touch("slV2"); $("nDeg").value = v.toFixed(1); $("lV2").textContent = `to ${v.toFixed(1)}°`;
+  sendLater("deg", "dg" + v);
+}
+document.querySelectorAll(".stepper").forEach(st => {
+  const inp = st.querySelector("input"), sl = st.dataset.sl;
+  st.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const d = +b.dataset.d;
+    if (sl) applyLevel(sl, +$(sl).value + d);
+    else applyDeg((parseFloat(inp.value) || 0) + d);
+  };
+  inp.onchange = () => { const v = parseFloat(inp.value); if (isNaN(v)) return; sl ? applyLevel(sl, v) : applyDeg(v); };
+  inp.onkeydown = e => { if (e.key === "Enter") inp.blur(); };
+});
+document.querySelector(".jog").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return; touch("slV2"); touch("deg"); send(b.dataset.c); };
+document.querySelectorAll(".ctlbox .chips").forEach(c => c.onclick = e => {
+  const b = e.target.closest("button"); if (!b) return; touch("slV2"); send(b.dataset.c); });
+
+// ---------- PC (HWiNFO) ----------
+let pc = {status: "starting", v: {}};
+// where the PC readings come from: "PCS reader", "PCS reader + HWiNFO" or "HWiNFO" (pc.src from the server)
+const srcName = () => { const s = String(pc.src || ""); return /reader/i.test(s) ? (/hwinfo/i.test(s) ? "PCS reader + HWiNFO" : "PCS reader") : "HWiNFO"; };
+const pcHist = [];                     // [t, cpu_t, gpu_t] for the sparklines (10 min)
+function renderPc() {
+  const v = pc.v || {}, g = k => v[k] ? v[k].v : null;
+  const ok = pc.status === "ok" || pc.status === "demo";
+  $("pcSrc").textContent = ok ? (pc.status === "demo" ? "HWiNFO (demo)" : srcName()) : pc.status;
+  $("pcSrc").style.color = ok ? "" : "var(--orange)";
+  $("vCpuT").innerHTML = deg(g("cpu_t"));
+  $("nCpu").textContent = ok ? `${g("cpu_w") == null ? "--" : Math.round(g("cpu_w"))} W · ${g("cpu_load") == null ? "--" : Math.round(g("cpu_load"))} % load` : " ";
+  $("vGpuT").innerHTML = deg(g("gpu_t"));
+  $("nGpu").textContent = ok ? `hot spot ${f1(g("gpu_hot"))}° · ${g("gpu_w") == null ? "--" : Math.round(g("gpu_w"))} W · ${g("gpu_load") == null ? "--" : Math.round(g("gpu_load"))} %` : " ";
+  const heat = g("cpu_w") != null || g("gpu_w") != null ? (g("cpu_w") || 0) + (g("gpu_w") || 0) : null;
+  $("vHeat").innerHTML = heat == null ? "--" : `${Math.round(heat)}<span class="u">W</span>`;
+  $("rTsen").textContent = `${f1(g("vrm_t"))} · ${f1(g("dimm_t"))} °C`;
+  $("rTsen").parentElement.style.display = info.standalone && g("vrm_t") == null && g("dimm_t") == null ? "none" : "";
+  // 16-pin shunt-modded (x1.4, hwinfo.py), slot stock; card's own total in the tooltip
+  const hp = g("gpu_hp_w"), slot = g("gpu_slot_w");
+  $("rGpuRails").textContent = hp == null ? "--" : `${Math.round(hp * 1.4)} · ${slot == null ? "--" : Math.round(slot)} W`;
+  $("rGpuRails").title = g("gpu_w_raw") == null ? "" : `card reports ${Math.round(g("gpu_w_raw"))} W total (16-pin ${Math.round(hp)} W before the x1.4)`;
+  renderCube();
+  const rpm = k => g(k) == null ? "--" : Math.round(g(k));
+  $("rPumps").textContent = `${rpm("w_pump")} · ${rpm("aio_pump")} rpm`;
+  $("rCfans").textContent = `${rpm("cpu_fan")} · ${rpm("cha1")} · ${rpm("cha2")} rpm`;
+  sparkPc("sCpu", 1, "--indigo"); sparkPc("sGpu", 2, "--green");
+  renderHw();
+}
+// Cube NTC (Apex T_Sensor via HWiNFO): the coolant every component gets. Live value from HWiNFO, history from the rows.
+function renderCube() {
+  const r = rows[rows.length - 1] || {}, v = pc.v || {};
+  const live = (pc.status === "ok" || pc.status === "demo") && v.t_sensor ? v.t_sensor.v : null;
+  $("vCube").innerHTML = deg(live);
+  const n = $("nCube");
+  if (live == null) { n.textContent = pc.status === "ok" ? "T_Sensor not found in HWiNFO" : `HWiNFO: ${pc.status}`; n.style.color = "var(--orange)"; }
+  else {
+    const m = r.DP != null ? live - r.DP : null, d2 = r.T2 != null ? live - r.T2 : null;
+    n.textContent = (m == null ? "-- above dew" : `${m.toFixed(1)} °C above dew`) +
+      (d2 == null ? "" : ` · ${d2 >= 0 ? "+" : ""}${d2.toFixed(1)} vs T2`);
+    n.style.color = m == null ? "" : m < 2 ? "var(--red)" : m < 4 ? "var(--orange)" : "";
+    $("rCubeDP").textContent = m == null ? "--" : `${m >= 0 ? "+" : ""}${m.toFixed(1)} °C`;
+    $("rCubeDP").style.color = m == null ? "" : m < 2 ? "var(--red)" : m < 4 ? "var(--orange)" : "";
+  }
+  if (live == null) $("rCubeDP").textContent = "--";
+  spark("sCube", "Tcube", "--pink");
+}
+function sparkPc(id, col, color) {
+  const pts = pcHist.filter(p => p[col] != null).map(p => ({t: p[0], v: p[col], w: p[col + 2]}));
+  drawSpark(id, pts, color);
+}
+
+// ---------- hardware (PCB) cards: per-core / per-chip readings from hwinfo.py DETAIL ----------
+// Die positions follow the Arrow Lake die shot (P-cores #1..#8, E-core clusters #1..#4). Which HWiNFO core number
+// sits where on the silicon is ASSUMED: P-cores in HWiNFO order 0, 1, 10, 11, 12, 13, 22, 23 -> #1..#8, E-core
+// clusters 2-5, 6-9, 14-17, 18-21 -> #1..#4. GPU memory chips A0..D1 are placed around the die in HWiNFO order
+// (physical position ASSUMED).
+// CPU layouts (2026-11-23, owner's package mockups, light + dark): the package is drawn from a layout, picked by the CPU
+// name the sensors report (CPU_DEFS), else built from the core counts. Columns hold P-cores and 4-core E clusters with
+// the ring / L3 down the middle; E clusters are spread evenly among the P-cores of a column (8P+16E: P E P P E P,
+// 8P+8E: P P E P P, no E-cores: P only, 6 / 8 / 10 cores = 3 / 4 / 5 rows).
+// Core Ultra 9 285K and Core Ultra 7 270K Plus: the same die and the same layout (owner 2026-11-23).
+const CPU_DEFS = [
+  { id: "arl-8p16e", match: /core\s+ultra\s+(9\s+285K|7\s+270K)/i, label: "Core Ultra 7 270K Plus",
+    p: [0, 1, 10, 11, 12, 13, 22, 23], e: [[2, 3, 4, 5], [6, 7, 8, 9], [14, 15, 16, 17], [18, 19, 20, 21]], l3: "36 MB", tile: "COMPUTE TILE" },
+  // owner's mockups cpu-<model>-light / -dark (2026-11-23). Core numbers = the reader's order, P-cores first on hybrid
+  // Core i parts; which number sits where on the die is ASSUMED (as for the 270K Plus).
+  cpuDef("rpl-14900k", /i9[-\s]?14900K/i, "Core i9-14900K", 8, 16, "36 MB"),
+  cpuDef("rpl-13900k", /i9[-\s]?13900K/i, "Core i9-13900K", 8, 16, "36 MB"),
+  cpuDef("adl-12900k", /i9[-\s]?12900K/i, "Core i9-12900K", 8, 8, "30 MB"),
+  cpuDef("rkl-11900k", /i9[-\s]?11900K/i, "Core i9-11900K", 8, 0, "16 MB"),
+  cpuDef("cml-10900k", /i9[-\s]?10900K/i, "Core i9-10900K", 10, 0, "20 MB"),
+  cpuDef("cfl-9900k", /i9[-\s]?9900K/i, "Core i9-9900K", 8, 0, "16 MB"),
+  cpuDef("cfl-8700k", /i7[-\s]?8700K/i, "Core i7-8700K", 6, 0, "12 MB"),
+];
+function cpuDef(id, match, label, nP, nE, l3, tile = "DIE") {
+  const p = [...Array(nP).keys()], e = [];
+  for (let i = 0; i < nE; i += 4) e.push([0, 1, 2, 3].map(j => nP + i + j));
+  return { id, match, label, p, e, l3, tile };
+}
+// the rest of the Intel desktop line back to 2nd gen (owner 2026-11-23: "back to 2600K, that's my OG CPU"). Model match
+// takes the K / F / KF / KS / C / plain variants (same die and layout). Core numbers P-cores first (ASSUMED on Arrow Lake,
+// where the 285K / 270K Plus interleave them).
+function intelDef(models, label, nP, nE, l3, tile) {
+  const re = new RegExp(`(?:i[3579]|ultra\\s+\\d)[-\\s]+(?:${models.join("|")})[A-Z]*(?![0-9])`, "i");
+  return cpuDef("intel-" + models[0].toLowerCase(), re, label, nP, nE, l3, tile);
+}
+const INTEL_MORE = [
+  // Arrow Lake (Core Ultra 200S / 200S Plus): compute tile
+  intelDef(["265K"], "Core Ultra 7 265K", 8, 12, "30 MB", "COMPUTE TILE"),
+  intelDef(["250K Plus"], "Core Ultra 5 250K Plus", 6, 12, "30 MB", "COMPUTE TILE"),
+  intelDef(["245K"], "Core Ultra 5 245K", 6, 8, "24 MB", "COMPUTE TILE"),
+  intelDef(["225"], "Core Ultra 5 225", 6, 4, "20 MB", "COMPUTE TILE"),
+  // 14th gen (Raptor Lake Refresh)
+  intelDef(["14700"], "Core i7-14700K", 8, 12, "33 MB"),
+  intelDef(["14600"], "Core i5-14600K", 6, 8, "24 MB"),
+  intelDef(["14400"], "Core i5-14400", 6, 4, "20 MB"),
+  // 13th gen (Raptor Lake)
+  intelDef(["13700"], "Core i7-13700K", 8, 8, "30 MB"),
+  intelDef(["13600"], "Core i5-13600K", 6, 8, "24 MB"),
+  intelDef(["13400"], "Core i5-13400", 6, 4, "20 MB"),
+  // 12th gen (Alder Lake)
+  intelDef(["12700"], "Core i7-12700K", 8, 4, "25 MB"),
+  intelDef(["12600K"], "Core i5-12600K", 6, 4, "20 MB"),
+  intelDef(["12400"], "Core i5-12400", 6, 0, "18 MB"),
+  // 11th gen (Rocket Lake)
+  intelDef(["11700"], "Core i7-11700K", 8, 0, "16 MB"),
+  intelDef(["11600", "11400"], "Core i5-11600K / 11400", 6, 0, "12 MB"),
+  // 10th gen (Comet Lake)
+  intelDef(["10700"], "Core i7-10700K", 8, 0, "16 MB"),
+  intelDef(["10600", "10400"], "Core i5-10600K / 10400", 6, 0, "12 MB"),
+  // 9th gen (Coffee Lake Refresh)
+  intelDef(["9700"], "Core i7-9700K", 8, 0, "12 MB"),
+  intelDef(["9600", "9400"], "Core i5-9600K / 9400", 6, 0, "9 MB"),
+  // 8th gen (Coffee Lake)
+  intelDef(["8086"], "Core i7-8086K", 6, 0, "12 MB"),
+  intelDef(["8700"], "Core i7-8700", 6, 0, "12 MB"),
+  intelDef(["8600", "8400"], "Core i5-8600K / 8400", 6, 0, "9 MB"),
+  // 7th gen (Kaby Lake)
+  intelDef(["7700"], "Core i7-7700K", 4, 0, "8 MB"),
+  intelDef(["7600"], "Core i5-7600K", 4, 0, "6 MB"),
+  // 6th gen (Skylake)
+  intelDef(["6700"], "Core i7-6700K", 4, 0, "8 MB"),
+  intelDef(["6600"], "Core i5-6600K", 4, 0, "6 MB"),
+  // 5th gen (Broadwell): 128 MB eDRAM as L4 next to the die
+  intelDef(["5775"], "Core i7-5775C", 4, 0, "6 MB + 128 MB eDRAM"),
+  // 4th gen (Haswell / Devil's Canyon)
+  intelDef(["4790", "4770"], "Core i7-4790K / 4770K", 4, 0, "8 MB"),
+  intelDef(["4690", "4670"], "Core i5-4690K / 4670K", 4, 0, "6 MB"),
+  // 3rd gen (Ivy Bridge)
+  intelDef(["3770"], "Core i7-3770K", 4, 0, "8 MB"),
+  intelDef(["3570"], "Core i5-3570K", 4, 0, "6 MB"),
+  // 2nd gen (Sandy Bridge)
+  intelDef(["2700", "2600"], "Core i7-2600K / 2700K", 4, 0, "8 MB"),
+  intelDef(["2500"], "Core i5-2500K", 4, 0, "6 MB"),
+];
+CPU_DEFS.push(...INTEL_MORE);
+let P_ORDER = CPU_DEFS[0].p, E_CL = CPU_DEFS[0].e, CPU_DEF = CPU_DEFS[0];
+function cpuLayout(d) {
+  const name = (d.cpu || {}).name || "";
+  const def = CPU_DEFS.find(x => x.match.test(name));
+  if (def) return def;
+  const ids = Object.keys(d.core || {}).map(Number).sort((a, b) => a - b);
+  if (!ids.length) return CPU_DEF;
+  if (/ryzen/i.test(name)) {                                         // unknown Ryzen: 1 CCD up to 8 cores, else 2
+    const n = ids.length, g = n > 8 ? [Math.ceil(n / 2), Math.floor(n / 2)] : [n];
+    return Object.assign(amdDef(["x"], name.replace(/^amd\s+/i, "").replace(/\s+\d+-core processor$/i, ""), 4, g.map(k => Math.min(8, k))),
+                         { id: "zen-generic" });
+  }                                   // no data yet: keep the last layout
+  const isE = n => (d.core[n] || {}).kind_E != null;
+  const p = ids.filter(n => !isE(n)), es = ids.filter(isE), e = [];
+  for (let i = 0; i < es.length; i += 4) e.push(es.slice(i, i + 4));
+  return { id: `gen-${p.length}p${es.length}e`, match: /$^/, label: name.replace(/^(intel|amd)\s+/i, "") || `${ids.length}-core CPU`, p, e };
+}
+// rows of one column: its P-cores with its E clusters spread evenly among them
+function cpuColumn(nP, nE) {
+  const n = nP + nE, at = new Set([...Array(nE).keys()].map(k => Math.round((k + .5) * n / nE - .5)));
+  let pi = 0, ei = 0;
+  return [...Array(n).keys()].map(r => at.has(r) ? ["E", ei++] : ["P", pi++]);
+}
+// AMD Ryzen, Zen 2-5 (2026-11-23, owner: the popular parts, more variants for the newer ones). Chiplets: I/O die left,
+// 1 or 2 CCDs right (as on the AM4 / AM5 package). A CCD has 8 core slots around its L3; Zen 2 splits it into two
+// 4-core CCXs with 16 MB L3 each, Zen 3-5 one 8-core CCX with 32 MB. 6 / 12-core parts have 6 cores per CCD (Zen 2:
+// 3 per CCX). X3D: 3D V-Cache on CCD0 (96 MB), on both CCDs for the 9950X3D2 (192 MB total). Core numbers = the
+// reader's order, CCD0 first; which slot each core sits in is ASSUMED.
+function amdDef(models, label, zen, ccds, vc = []) {
+  const io = zen <= 3 ? "12 nm" : "6 nm";
+  const re = new RegExp(`ryzen\\s+\\d\\s+(${models.join("|")})(?![0-9A-Z])`, "i");
+  let n = 0;
+  const cc = ccds.map((k, i) => ({ cores: [...Array(k).keys()].map(() => n++), vcache: vc.includes(i),
+    l3: zen === 2 ? "2 × 16 MB" : vc.includes(i) ? "96 MB" : "32 MB" }));
+  const l3 = cc.reduce((a, x) => a + (zen === 2 ? 32 : x.vcache ? 96 : 32), 0) + " MB";
+  return { id: "zen" + zen + "-" + models[0].toLowerCase(), match: re, label, amd: true, zen, io, ccds: cc,
+           p: [...Array(n).keys()], e: [], l3 };
+}
+const AMD_DEFS = [
+  amdDef(["3600X", "3600"], "Ryzen 5 3600X / 3600", 2, [6]),
+  amdDef(["3700X", "3800X"], "Ryzen 7 3700X / 3800X", 2, [8]),
+  amdDef(["3900X"], "Ryzen 9 3900X", 2, [6, 6]),
+  amdDef(["3950X"], "Ryzen 9 3950X", 2, [8, 8]),
+  amdDef(["5600X", "5600"], "Ryzen 5 5600X / 5600", 3, [6]),
+  amdDef(["5700X", "5800X"], "Ryzen 7 5700X / 5800X", 3, [8]),
+  amdDef(["5700X3D", "5800X3D"], "Ryzen 7 5700X3D / 5800X3D", 3, [8], [0]),
+  amdDef(["5900X"], "Ryzen 9 5900X", 3, [6, 6]),
+  amdDef(["5950X"], "Ryzen 9 5950X", 3, [8, 8]),
+  amdDef(["7600X", "7600"], "Ryzen 5 7600X / 7600", 4, [6]),
+  amdDef(["7700X", "7700"], "Ryzen 7 7700X / 7700", 4, [8]),
+  amdDef(["7800X3D"], "Ryzen 7 7800X3D", 4, [8], [0]),
+  amdDef(["7900X", "7900"], "Ryzen 9 7900X / 7900", 4, [6, 6]),
+  amdDef(["7900X3D"], "Ryzen 9 7900X3D", 4, [6, 6], [0]),
+  amdDef(["7950X"], "Ryzen 9 7950X", 4, [8, 8]),
+  amdDef(["7950X3D"], "Ryzen 9 7950X3D", 4, [8, 8], [0]),
+  amdDef(["9600X", "9600"], "Ryzen 5 9600X / 9600", 5, [6]),
+  amdDef(["9700X"], "Ryzen 7 9700X", 5, [8]),
+  amdDef(["9800X3D"], "Ryzen 7 9800X3D", 5, [8], [0]),
+  amdDef(["9850X3D"], "Ryzen 7 9850X3D", 5, [8], [0]),
+  amdDef(["9900X"], "Ryzen 9 9900X", 5, [6, 6]),
+  amdDef(["9900X3D"], "Ryzen 9 9900X3D", 5, [6, 6], [0]),
+  amdDef(["9950X"], "Ryzen 9 9950X", 5, [8, 8]),
+  amdDef(["9950X3D"], "Ryzen 9 9950X3D", 5, [8, 8], [0]),
+  amdDef(["9950X3D2"], "Ryzen 9 9950X3D2", 5, [8, 8], [0, 1]),
+];
+CPU_DEFS.push(...AMD_DEFS);
+
+function amdPkg(def, c, cpu) {
+  const o = [], x0 = 8, y0 = 85, S = 330;                      // square package (AM4 / AM5 40 x 40 mm)
+  o.push(`<rect x="${x0}" y="${y0}" width="${S}" height="${S}" rx="12" class="pcb"/>`);
+  for (const [x, y] of [[x0 + 14, y0 + 14], [x0 + S - 14, y0 + 14], [x0 + 14, y0 + S - 14], [x0 + S - 14, y0 + S - 14]])
+    o.push(`<circle cx="${x}" cy="${y}" r="3" class="pad"/>`);
+  for (let i = 0; i < 9; i++) for (const y of [y0 + 26, y0 + S - 32]) o.push(`<rect x="${x0 + 52 + i * 26}" y="${y}" width="14" height="6" rx="1" class="pad"/>`);
+  for (let i = 0; i < 8; i++) for (const x of [x0 + 24, x0 + S - 30]) o.push(`<rect x="${x}" y="${y0 + 58 + i * 26}" width="6" height="14" rx="1" class="pad"/>`);
+  // I/O die
+  o.push(`<rect x="${x0 + 44}" y="${y0 + 95}" width="88" height="140" rx="6" class="die"/>`);
+  o.push(ST(x0 + 88, y0 + 160, 11, "I/O die", {w: 600}));
+  o.push(ST(x0 + 88, y0 + 175, 10, def.io, {c: "--label2"}));
+  o.push(ST(x0 + 88, y0 + 192, 10, `Zen ${def.zen}`, {c: "--label2"}));
+  // CCDs
+  const cx = x0 + 146, cw = 150, two = def.ccds.length > 1;
+  const boxes = two ? [[y0 + 48, 112], [y0 + 170, 112]] : [[y0 + 80, 170]];
+  def.ccds.forEach((ccd, i) => {
+    const [cy, ch] = boxes[i];
+    o.push(`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="6" class="die"${ccd.vcache ? ' style="stroke:var(--purple);stroke-opacity:.9;stroke-width:1.6"' : ""}/>`);
+    const ccdT = (cpu.ccd_t || [])[i];
+    o.push(ST(cx + 6, cy + 11, 8.5, `CCD${i} · ${ccd.l3}${ccd.vcache ? " · 3D V-Cache" : ""}`, {a: "start", c: ccd.vcache ? "--purple" : "--label2", w: 600}));
+    if (ccdT != null) o.push(ST(cx + cw - 6, cy + 11, 9, `${Math.round(ccdT)}°`, {a: "end", c: heatVar(ccdT), w: 700}));
+    // 8 slots: 2 columns x 4 rows around the L3 strip; Zen 2 = two CCXs (rows 0-1, 2-3) with their own L3
+    const pad = 5, top = cy + 16, l3w = 14, colW = (cw - 2 * pad - l3w - 8) / 2, xgap = def.zen === 2 ? 5 : 0;
+    const rh = (ch - (top - cy) - pad - 3 * 3 - xgap) / 4;
+    const rowY = r => top + r * (rh + 3) + (r >= 2 ? xgap : 0);
+    const l3s = def.zen === 2 ? [[rowY(0), 2 * rh + 3], [rowY(2), 2 * rh + 3]] : [[top, 4 * rh + 9]];
+    l3s.forEach(([y, h]) => o.push(`<rect x="${cx + pad + colW + 4}" y="${y}" width="${l3w}" height="${h}" rx="3" class="cell" style="fill:var(--purple);fill-opacity:${ccd.vcache ? .3 : .14}"/>`));
+    // which slots are active: 8 = all; 6 = Zen 2 drops one per CCX (bottom right), Zen 3+ the bottom row
+    const off = ccd.cores.length >= 8 ? [] : def.zen === 2 ? [3, 7] : [6, 7];
+    let k = 0;
+    for (let s = 0; s < 8; s++) {
+      const r = Math.floor(s / 2), col = s % 2, x = cx + pad + col * (colW + l3w + 8), y = rowY(r);
+      if (off.includes(s) || k >= ccd.cores.length) {
+        o.push(`<rect x="${x}" y="${y}" width="${colW}" height="${rh}" rx="3" class="cell" style="fill:var(--fill);fill-opacity:.25;stroke-dasharray:2 2"/>`);
+        continue;
+      }
+      const n = ccd.cores[k++], q = c[n] || {};
+      o.push(cellRect(x, y, colW, rh, q.t, 3));
+      if (rh >= 34) {
+        o.push(ST(x + 4, y + 10, 8, `C${n}`, {a: "start", c: "--label2", w: 600}));
+        o.push(ST(x + colW / 2, y + rh / 2 + 5, 14, q.t == null ? "--" : `${Math.round(q.t)}°`, {c: heatVar(q.t), w: 700}));
+        o.push(ST(x + colW / 2, y + rh / 2 + 16, 8.5, ghz(q.clk)));
+      } else {
+        o.push(ST(x + 4, y + rh / 2 + 3, 8, `C${n}`, {a: "start", c: "--label2", w: 600}));
+        o.push(ST(x + colW - 4, y + rh / 2 + 4, 11, q.t == null ? ghz(q.clk).replace(" GHz", "") : `${Math.round(q.t)}°`,
+                  {a: "end", c: q.t == null ? "--label" : heatVar(q.t), w: 700}));
+      }
+    }
+  });
+  o.push(ST(x0 + S / 2, y0 + S + 22, 10, `L3 ${def.l3} · ${def.ccds.reduce((a, x) => a + x.cores.length, 0)} cores`, {c: "--label2", w: 600}));
+  return o.join("");
+}
+
+const heatVar = t => t == null ? "--gray" : t < 40 ? "--teal" : t < 60 ? "--green" : t < 75 ? "--orange" : "--red";
+const ST = (x, y, size, txt, o = {}) =>
+  `<text x="${x}" y="${y}" font-size="${size}" font-weight="${o.w || 400}" text-anchor="${o.a || "middle"}" ` +
+  `style="fill:var(${o.c || "--label"});opacity:${o.op == null ? 1 : o.op}">${txt}</text>`;
+const fx = (v, n = 0, u = "") => v == null ? "--" : `${(+v).toFixed(n)}${u}`;
+const ghz = mhz => mhz == null ? "--" : (mhz / 1000).toFixed(2) + " GHz";
+const avg = a => { const b = a.filter(x => x != null); return b.length ? b.reduce((p, q) => p + q, 0) / b.length : null; };
+const cellRect = (x, y, w, h, t, rx = 4) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" class="cell" style="fill:var(${heatVar(t)});fill-opacity:${t == null ? .06 : .2}"/>`;
+
+function cpuSvg(d) {
+  // Package as in the mockups (688 x 1024 px drawing, scaled k): rounded substrate, 4 holes, 6 pads right-top and 5
+  // left-bottom, the die panel with the core columns and the ring / L3 between them; readouts to the right.
+  const def = cpuLayout(d);
+  CPU_DEF = def; P_ORDER = def.p; E_CL = def.e;
+  const c = d.core || {}, cpu = d.cpu || {}, dimm = d.dimm || {}, o = [];
+  const k = .4885, X = v => +(8 + (v - 15) * k).toFixed(1), Y = v => +(8 + (v - 17) * k).toFixed(1), L = v => +(v * k).toFixed(1);
+  if (def.amd) o.push(amdPkg(def, c, cpu));
+  else {
+  o.push(`<rect x="${X(15)}" y="${Y(17)}" width="${L(655)}" height="${L(991)}" rx="${L(30)}" class="pcb"/>`);
+  for (const [x, y] of [[45, 43], [641, 43], [45, 983], [641, 983]]) o.push(`<circle cx="${X(x)}" cy="${Y(y)}" r="${L(6)}" class="pad"/>`);
+  for (let i = 0; i < 6; i++) o.push(`<rect x="${X(598)}" y="${Y(141 + i * 20)}" width="${L(25)}" height="${L(12)}" rx="1.5" class="pad"/>`);
+  for (let i = 0; i < 5; i++) o.push(`<rect x="${X(58)}" y="${Y(753 + i * 20)}" width="${L(25)}" height="${L(12)}" rx="1.5" class="pad"/>`);
+  o.push(`<rect x="${X(115)}" y="${Y(88)}" width="${L(455)}" height="${L(862)}" rx="${L(14)}" class="die"/>`);
+  o.push(ST(X(342), Y(76), 10, def.tile || "DIE", {c: "--label2", w: 600}));
+  // columns: P-cores alternate left / right in die order (left = even), E clusters likewise
+  const colP = [def.p.filter((_, i) => i % 2 === 0), def.p.filter((_, i) => i % 2 === 1)];
+  const colE = [def.e.filter((_, i) => i % 2 === 0), def.e.filter((_, i) => i % 2 === 1)];
+  const top = 104, bot = 934, gap = 11, colX = [127, 379], cw = 179;
+  for (let col = 0; col < 2; col++) {
+    const rows = cpuColumn(colP[col].length, colE[col].length);
+    const wsum = rows.reduce((a, [t]) => a + (t === "E" ? 1.3 : 1), 0), unit = (bot - top - gap * (rows.length - 1)) / wsum;
+    let y = top;
+    rows.forEach(([kind, i]) => {
+      const hh = unit * (kind === "E" ? 1.3 : 1), x = colX[col];
+      if (kind === "P") {
+        const n = colP[col][i], q = c[n] || {}, px = X(x), py = Y(y), w = L(cw), h = L(hh), mid = py + h / 2;
+        o.push(cellRect(px, py, w, h, q.t, 5));
+        o.push(ST(px + 6, py + 12, 9, `P${n}`, {a: "start", c: "--label2", w: 600}));
+        o.push(ST(px + w - 6, py + 12, 9, fx(q.use, 0, " %"), {a: "end", c: "--label2"}));
+        o.push(ST(px + w / 2, mid + 4, 19, q.t == null ? "--" : `${Math.round(q.t)}°`, {c: heatVar(q.t), w: 700}));
+        o.push(ST(px + w / 2, mid + 17, 10, ghz(q.clk)));
+        if (h > 52) o.push(ST(px + w / 2, mid + 28, 9, fx(q.v, 3, " V"), {c: "--label2"}));
+      } else {
+        const cl = colE[col][i], qs = cl.map(n => c[n] || {});
+        o.push(`<rect x="${X(x)}" y="${Y(y)}" width="${L(cw)}" height="${L(hh)}" rx="${L(10)}" class="cell" style="fill:var(--fill);fill-opacity:.5"/>`);
+        const pad = 12, sg = 10, sw = (cw - 2 * pad - sg) / 2, sh = (hh - 2 * pad - sg) / 2;
+        qs.forEach((q, j) => {
+          const sx = X(x + pad + (j % 2) * (sw + sg)), sy = Y(y + pad + Math.floor(j / 2) * (sh + sg)), w = L(sw), h = L(sh);
+          o.push(cellRect(sx, sy, w, h, q.t, 4));
+          o.push(ST(sx + 4, sy + 9, 7.5, `E${cl[j]}`, {a: "start", c: "--label2", w: 600}));
+          o.push(ST(sx + w / 2, sy + h / 2 + 7, 12, q.t == null ? "--" : `${Math.round(q.t)}°`, {c: heatVar(q.t), w: 700}));
+        });
+      }
+      y += hh + gap;
+    });
+  }
+  // ring + L3 down the middle
+  o.push(`<rect x="${X(315)}" y="${Y(top)}" width="${L(56)}" height="${L(bot - top)}" rx="${L(8)}" class="cell" style="fill:var(--purple);fill-opacity:.14"/>`);
+  o.push(`<text x="0" y="0" font-size="10" font-weight="600" text-anchor="middle" style="fill:var(--label)" ` +
+         `transform="translate(${X(343) + 3.5} ${Y((top + bot) / 2)}) rotate(-90)">Ring / L3${def.l3 ? " " + def.l3 : ""} · ${ghz(cpu.ring_clk)} · ${fx(cpu.ring_v, 3, " V")}</text>`);
+  }
+  // readouts to the right of the package
+  // Zen 4 / 5 report no per-core temperatures: core max = the hottest CCD there
+  const ccdT = (cpu.ccd_t || []).filter(x => x != null), maxT = cpu.max_t ?? (ccdT.length ? Math.max(...ccdT) : null);
+  let rows = [
+    ["PACKAGE", fx(cpu.pkg_t, 0, " °C"), heatVar(cpu.pkg_t)],
+    [cpu.max_t == null && ccdT.length ? "CCD MAX" : "CORE MAX", fx(maxT, 0, " °C"), heatVar(maxT)],
+    ["POWER", fx(cpu.pkg_w, 0, " W")],
+    [def.amd ? "CORES · SOC" : "IA · SA", `${fx(cpu.ia_w, 0)} · ${fx(cpu.sa_w, 0)} W`],
+    def.amd ? ["VCORE · SOC", `${fx(cpu.vcore, 3)} · ${fx(cpu.soc_v, 3)} V`]
+            : [def.tile === "COMPUTE TILE" ? "VCORE (DLVRin)" : "VCORE", fx(cpu.vcore, 3, " V")],
+    def.amd || info.standalone ? ["VRM", fx(cpu.vrm_t, 0, " °C"), heatVar(cpu.vrm_t)]
+                               : ["VRM · VR VCC", `${fx(cpu.vrm_t, 0)} · ${fx(cpu.vr_t, 0)} °C`],
+    ["LOAD", fx(cpu.use, 0, " %")],
+  ];
+  if (info.standalone) rows = rows.filter(r => /\d/.test(r[1]));    // monitor build: leave out what this PC doesn't report
+  rows.forEach(([lab, val, col], i) => {
+    const y = 40 + i * 52;
+    o.push(ST(352, y, 12, lab, {a: "start", c: "--label2", w: 600}));
+    o.push(ST(352, y + 24, 21, val, {a: "start", w: 700, c: col || "--label"}));
+  });
+  Object.keys(dimm).sort().forEach((k, i) => {
+    const q = dimm[k], y = 404 + i * 46;
+    o.push(ST(352, y, 12, `DIMM ${k}`, {a: "start", c: "--label2", w: 600}));
+    o.push(ST(352, y + 19, 17, fx(q.t, 1, " °C"), {a: "start", w: 700, c: heatVar(q.t)}));
+    o.push(ST(352, y + 34, 12, `${fx(q.w, 2, " W")} · ${fx(q.vdd, 2, " V")}`, {a: "start", c: "--label2"}));
+  });
+  return o.join("");
+}
+
+// ---------- GPU layouts (2026-11-23, owner: "back to the GTX 960, some AMD too") ----------
+// The board is drawn from the GPU name the reader reports (gpu.name): die (chip name, size class), memory chips on the
+// front (bus width / 32; clamshell cards carry as many again on the back), HBM stacks on an interposer (Fury / Vega /
+// Radeon VII), Navi 31 / 32 as a GCD with its MCDs, core VRM phases, power connectors as on the reference / Founders
+// Edition board (partner cards differ: ASSUMED). This PC's ASUS TUF 4070 Ti Super keeps its traced board (gpuTuf).
+// Matching: more specific names first (4070 Ti Super before 4070 Ti before 4070).
+function gpuDef(model, label, chip, o) {
+  const re = new RegExp(`\\b${model.replace(/ /g, "\\s*")}\\b(?!\\s*(?:ti|super|xtx|xt|gre)\\b)`, "i");
+  const bus = o.bus || 0;
+  return Object.assign({ id: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), match: re, label, chip,
+    chips: o.hbm ? 0 : bus / 32, die: "m", ph: 6, pwr: ["8"] }, o);
+}
+const NV = (m, l, c, o) => gpuDef(m, "GeForce " + l, c, Object.assign({ vendor: "nv" }, o));
+const RD = (m, l, c, o) => gpuDef(m, "Radeon " + l, c, Object.assign({ vendor: "amd" }, o));
+const GPU_DEFS = [
+  // NVIDIA: RTX 50 (Blackwell, GDDR7)
+  NV("5090", "RTX 5090", "GB202", { bus: 512, gb: 32, mem: "GDDR7", die: "xl", ph: 16, pwr: ["16"] }),
+  NV("5080", "RTX 5080", "GB203", { bus: 256, gb: 16, mem: "GDDR7", die: "l", ph: 12, pwr: ["16"] }),
+  NV("5070 Ti", "RTX 5070 Ti", "GB203", { bus: 256, gb: 16, mem: "GDDR7", die: "l", ph: 10, pwr: ["16"] }),
+  NV("5070", "RTX 5070", "GB205", { bus: 192, gb: 12, mem: "GDDR7", die: "m", ph: 8, pwr: ["16"] }),
+  NV("5060 Ti", "RTX 5060 Ti", "GB206", { bus: 128, gb: "8 / 16", mem: "GDDR7", die: "s", ph: 6, clam: "16 GB" }),
+  NV("5060", "RTX 5060", "GB206", { bus: 128, gb: 8, mem: "GDDR7", die: "s", ph: 5 }),
+  // RTX 40 (Ada)
+  NV("4090", "RTX 4090", "AD102", { bus: 384, gb: 24, mem: "GDDR6X", die: "xl", ph: 20, pwr: ["16"] }),
+  NV("4080 Super", "RTX 4080 Super", "AD103", { bus: 256, gb: 16, mem: "GDDR6X", die: "l", ph: 12, pwr: ["16"] }),
+  NV("4080", "RTX 4080", "AD103", { bus: 256, gb: 16, mem: "GDDR6X", die: "l", ph: 12, pwr: ["16"] }),
+  NV("4070 Ti Super", "RTX 4070 Ti Super", "AD103", { bus: 256, gb: 16, mem: "GDDR6X", die: "l", ph: 8, pwr: ["16"], tuf: true }),
+  NV("4070 Ti", "RTX 4070 Ti", "AD104", { bus: 192, gb: 12, mem: "GDDR6X", die: "m", ph: 8, pwr: ["16"] }),
+  NV("4070 Super", "RTX 4070 Super", "AD104", { bus: 192, gb: 12, mem: "GDDR6X", die: "m", ph: 7, pwr: ["16"] }),
+  NV("4070", "RTX 4070", "AD104", { bus: 192, gb: 12, mem: "GDDR6X", die: "m", ph: 6, pwr: ["16"] }),
+  NV("4060 Ti", "RTX 4060 Ti", "AD106", { bus: 128, gb: "8 / 16", mem: "GDDR6", die: "s", ph: 5, clam: "16 GB" }),
+  NV("4060", "RTX 4060", "AD107", { bus: 128, gb: 8, mem: "GDDR6", die: "s", ph: 4 }),
+  // RTX 30 (Ampere)
+  NV("3090 Ti", "RTX 3090 Ti", "GA102", { bus: 384, gb: 24, mem: "GDDR6X", die: "xl", ph: 16, pwr: ["16"] }),
+  NV("3090", "RTX 3090", "GA102", { bus: 384, gb: 24, mem: "GDDR6X", die: "xl", ph: 16, pwr: ["8", "8", "8"], clam: "24 GB" }),
+  NV("3080 Ti", "RTX 3080 Ti", "GA102", { bus: 384, gb: 12, mem: "GDDR6X", die: "xl", ph: 16, pwr: ["8", "8", "8"] }),
+  NV("3080", "RTX 3080", "GA102", { bus: 320, gb: "10 / 12", mem: "GDDR6X", die: "xl", ph: 14, pwr: ["8", "8"] }),
+  NV("3070 Ti", "RTX 3070 Ti", "GA104", { bus: 256, gb: 8, mem: "GDDR6X", die: "l", ph: 10, pwr: ["8", "8"] }),
+  NV("3070", "RTX 3070", "GA104", { bus: 256, gb: 8, mem: "GDDR6", die: "l", ph: 8, pwr: ["8", "8"] }),
+  NV("3060 Ti", "RTX 3060 Ti", "GA104", { bus: 256, gb: 8, mem: "GDDR6", die: "l", ph: 7 }),
+  NV("3060", "RTX 3060", "GA106", { bus: 192, gb: 12, mem: "GDDR6", die: "m", ph: 6 }),
+  NV("3050", "RTX 3050", "GA106", { bus: 128, gb: 8, mem: "GDDR6", die: "m", ph: 4 }),
+  // RTX 20 (Turing)
+  NV("2080 Ti", "RTX 2080 Ti", "TU102", { bus: 352, gb: 11, mem: "GDDR6", die: "xl", ph: 13, pwr: ["8", "8"] }),
+  NV("2080 Super", "RTX 2080 Super", "TU104", { bus: 256, gb: 8, mem: "GDDR6", die: "l", ph: 10, pwr: ["8", "6"] }),
+  NV("2080", "RTX 2080", "TU104", { bus: 256, gb: 8, mem: "GDDR6", die: "l", ph: 10, pwr: ["8", "6"] }),
+  NV("2070 Super", "RTX 2070 Super", "TU104", { bus: 256, gb: 8, mem: "GDDR6", die: "l", ph: 8, pwr: ["8", "6"] }),
+  NV("2070", "RTX 2070", "TU106", { bus: 256, gb: 8, mem: "GDDR6", die: "m", ph: 8 }),
+  NV("2060 Super", "RTX 2060 Super", "TU106", { bus: 256, gb: 8, mem: "GDDR6", die: "m", ph: 7 }),
+  NV("2060", "RTX 2060", "TU106", { bus: 192, gb: 6, mem: "GDDR6", die: "m", ph: 6 }),
+  // GTX 16 (Turing, no RT)
+  NV("1660 Ti", "GTX 1660 Ti", "TU116", { bus: 192, gb: 6, mem: "GDDR6", die: "s", ph: 4 }),
+  NV("1660 Super", "GTX 1660 Super", "TU116", { bus: 192, gb: 6, mem: "GDDR6", die: "s", ph: 4 }),
+  NV("1660", "GTX 1660", "TU116", { bus: 192, gb: 6, mem: "GDDR5", die: "s", ph: 4 }),
+  NV("1650", "GTX 1650", "TU117", { bus: 128, gb: 4, mem: "GDDR5", die: "s", ph: 3, pwr: [] }),
+  // GTX 10 (Pascal)
+  NV("1080 Ti", "GTX 1080 Ti", "GP102", { bus: 352, gb: 11, mem: "GDDR5X", die: "xl", ph: 7, pwr: ["8", "6"] }),
+  NV("1080", "GTX 1080", "GP104", { bus: 256, gb: 8, mem: "GDDR5X", die: "m", ph: 5 }),
+  NV("1070 Ti", "GTX 1070 Ti", "GP104", { bus: 256, gb: 8, mem: "GDDR5", die: "m", ph: 5 }),
+  NV("1070", "GTX 1070", "GP104", { bus: 256, gb: 8, mem: "GDDR5", die: "m", ph: 4 }),
+  NV("1060", "GTX 1060", "GP106", { bus: 192, gb: "3 / 6", mem: "GDDR5", die: "s", ph: 4, pwr: ["6"] }),
+  NV("1050 Ti", "GTX 1050 Ti", "GP107", { bus: 128, gb: 4, mem: "GDDR5", die: "s", ph: 3, pwr: [] }),
+  NV("1050", "GTX 1050", "GP107", { bus: 128, gb: 2, mem: "GDDR5", die: "s", ph: 3, pwr: [] }),
+  // GTX 900 (Maxwell)
+  NV("980 Ti", "GTX 980 Ti", "GM200", { bus: 384, gb: 6, mem: "GDDR5", die: "xl", ph: 6, pwr: ["8", "6"] }),
+  NV("980", "GTX 980", "GM204", { bus: 256, gb: 4, mem: "GDDR5", die: "m", ph: 4, pwr: ["6", "6"] }),
+  NV("970", "GTX 970", "GM204", { bus: 256, gb: "3.5 + 0.5", mem: "GDDR5", die: "m", ph: 4, pwr: ["6", "6"] }),
+  NV("960", "GTX 960", "GM206", { bus: 128, gb: "2 / 4", mem: "GDDR5", die: "s", ph: 3, pwr: ["6"] }),
+  // AMD: RX 9000 (RDNA 4)
+  RD("9070 XT", "RX 9070 XT", "Navi 48", { bus: 256, gb: 16, mem: "GDDR6", die: "l", ph: 10, pwr: ["8", "8"] }),
+  RD("9070", "RX 9070", "Navi 48", { bus: 256, gb: 16, mem: "GDDR6", die: "l", ph: 8, pwr: ["8", "8"] }),
+  RD("9060 XT", "RX 9060 XT", "Navi 44", { bus: 128, gb: "8 / 16", mem: "GDDR6", die: "s", ph: 5, clam: "16 GB" }),
+  // RX 7000 (RDNA 3; Navi 31 / 32 = GCD + MCDs)
+  RD("7900 XTX", "RX 7900 XTX", "Navi 31", { bus: 384, gb: 24, mem: "GDDR6", die: "xl", ph: 14, pwr: ["8", "8"], mcd: 6 }),
+  RD("7900 XT", "RX 7900 XT", "Navi 31", { bus: 320, gb: 20, mem: "GDDR6", die: "xl", ph: 12, pwr: ["8", "8"], mcd: 5 }),
+  RD("7900 GRE", "RX 7900 GRE", "Navi 31", { bus: 256, gb: 16, mem: "GDDR6", die: "xl", ph: 10, pwr: ["8", "8"], mcd: 4 }),
+  RD("7800 XT", "RX 7800 XT", "Navi 32", { bus: 256, gb: 16, mem: "GDDR6", die: "l", ph: 8, pwr: ["8", "8"], mcd: 4 }),
+  RD("7700 XT", "RX 7700 XT", "Navi 32", { bus: 192, gb: 12, mem: "GDDR6", die: "l", ph: 7, pwr: ["8", "8"], mcd: 3 }),
+  RD("7600", "RX 7600", "Navi 33", { bus: 128, gb: 8, mem: "GDDR6", die: "s", ph: 5 }),
+  // RX 6000 (RDNA 2)
+  RD("6950 XT", "RX 6950 XT", "Navi 21", { bus: 256, gb: 16, mem: "GDDR6", die: "xl", ph: 12, pwr: ["8", "8"] }),
+  RD("6900 XT", "RX 6900 XT", "Navi 21", { bus: 256, gb: 16, mem: "GDDR6", die: "xl", ph: 12, pwr: ["8", "8"] }),
+  RD("6800 XT", "RX 6800 XT", "Navi 21", { bus: 256, gb: 16, mem: "GDDR6", die: "xl", ph: 12, pwr: ["8", "8"] }),
+  RD("6800", "RX 6800", "Navi 21", { bus: 256, gb: 16, mem: "GDDR6", die: "xl", ph: 10, pwr: ["8", "8"] }),
+  RD("6700 XT", "RX 6700 XT", "Navi 22", { bus: 192, gb: 12, mem: "GDDR6", die: "m", ph: 8, pwr: ["8", "6"] }),
+  RD("6600 XT", "RX 6600 XT", "Navi 23", { bus: 128, gb: 8, mem: "GDDR6", die: "s", ph: 5 }),
+  RD("6600", "RX 6600", "Navi 23", { bus: 128, gb: 8, mem: "GDDR6", die: "s", ph: 4 }),
+  // RX 5000 (RDNA)
+  RD("5700 XT", "RX 5700 XT", "Navi 10", { bus: 256, gb: 8, mem: "GDDR6", die: "m", ph: 7, pwr: ["8", "6"] }),
+  RD("5700", "RX 5700", "Navi 10", { bus: 256, gb: 8, mem: "GDDR6", die: "m", ph: 6, pwr: ["8", "6"] }),
+  RD("5600 XT", "RX 5600 XT", "Navi 10", { bus: 192, gb: 6, mem: "GDDR6", die: "m", ph: 6 }),
+  // Vega / HBM
+  RD("VII", "VII", "Vega 20", { hbm: 4, gb: 16, mem: "HBM2", die: "l", ph: 10, pwr: ["8", "8"] }),
+  RD("Vega 64", "RX Vega 64", "Vega 10", { hbm: 2, gb: 8, mem: "HBM2", die: "l", ph: 12, pwr: ["8", "8"] }),
+  RD("Vega 56", "RX Vega 56", "Vega 10", { hbm: 2, gb: 8, mem: "HBM2", die: "l", ph: 12, pwr: ["8", "8"] }),
+  RD("Fury X", "R9 Fury X", "Fiji", { hbm: 4, gb: 4, mem: "HBM", die: "xl", ph: 6, pwr: ["8", "8"] }),
+  // Polaris / Hawaii
+  RD("590", "RX 590", "Polaris 30", { bus: 256, gb: 8, mem: "GDDR5", die: "s", ph: 6 }),
+  RD("580", "RX 580", "Polaris 20", { bus: 256, gb: "4 / 8", mem: "GDDR5", die: "s", ph: 6 }),
+  RD("570", "RX 570", "Polaris 20", { bus: 256, gb: "4 / 8", mem: "GDDR5", die: "s", ph: 5, pwr: ["6"] }),
+  RD("480", "RX 480", "Polaris 10", { bus: 256, gb: "4 / 8", mem: "GDDR5", die: "s", ph: 6, pwr: ["6"] }),
+  RD("390X", "R9 390X", "Hawaii", { bus: 512, gb: 8, mem: "GDDR5", die: "l", ph: 6, pwr: ["8", "6"] }),
+  RD("390", "R9 390", "Hawaii", { bus: 512, gb: 8, mem: "GDDR5", die: "l", ph: 6, pwr: ["8", "6"] }),
+];
+let GPU_DEF = GPU_DEFS.find(x => x.tuf);
+function gpuLayout(d) {
+  const name = (d.gpu || {}).name || "";
+  if (!name) return GPU_DEF;                                         // no name yet: keep the last one (this PC's card)
+  return GPU_DEFS.find(x => x.match.test(name)) ||
+    gpuDef("$^", name.replace(/^(nvidia|amd|advanced micro devices[^ ]*)\s+/i, "").replace(/^geforce\s+/i, "GeForce "), "GPU",
+           { bus: 256, gb: "", mem: "", vendor: /radeon|amd/i.test(name) ? "amd" : "nv", generic: true });
+}
+
+function gpuBoard(def, d) {
+  const g = d.gpu || {}, m = d.gmem || {}, o = [];
+  o.push(`<rect x="6" y="10" width="588" height="312" rx="10" class="pcb"/>`);
+  [[36, 40], [96, 44], [160, 40], [222, 40]].forEach(([y, hh]) => o.push(`<rect x="8" y="${y}" width="24" height="${hh}" rx="3" class="pad"/>`));
+  o.push(`<rect x="120" y="322" width="226" height="20" rx="2" class="gold"/>`);
+  for (let i = 0; i < 22; i++) o.push(`<rect x="${124 + i * 10}" y="325" width="5" height="14" rx="1" style="fill:var(--card);opacity:.55"/>`);
+  o.push(ST(233, 358, 11, `PCIe slot ${fx(g.slot_w, 0, " W")} · ${fx(g.slot_v, 2, " V")}`, {c: "--label2"}));
+  // package + die, size by class
+  const half = { s: 44, m: 52, l: 60, xl: 68 }[def.die] || 52, cx = 330, cy = 166;
+  const hbm = def.hbm || 0, mcd = def.mcd || 0;
+  const pw = hbm ? half + 56 : mcd ? half + 40 : half + 12, ph = half + 12;
+  o.push(`<rect x="${cx - pw}" y="${cy - ph}" width="${2 * pw}" height="${2 * ph}" rx="6" class="die"/>`);
+  for (const [x, y] of [[cx - pw - 18, cy - ph - 14], [cx + pw + 18, cy - ph - 14], [cx - pw - 18, cy + ph + 14], [cx + pw + 18, cy + ph + 14]])
+    o.push(`<circle cx="${x}" cy="${y}" r="5" class="pad"/>`);
+  const dw = half - (mcd ? 8 : 0);
+  o.push(cellRect(cx - dw, cy - half, 2 * dw, 2 * half, g.t, 4));
+  o.push(ST(cx, cy - half + 15, 10, def.chip + (mcd ? " GCD" : ""), {c: "--label2", w: 600}));
+  o.push(ST(cx, cy - 2, half > 50 ? 24 : 20, g.t == null ? "--" : `${Math.round(g.t)}°`, {c: heatVar(g.t), w: 700}));
+  o.push(ST(cx, cy + 14, 10, `hot spot ${fx(g.hot, 0, "°")}`, {c: heatVar(g.hot)}));
+  if (half >= 52) o.push(ST(cx, cy + 28, 10, ghz(g.clk)));
+  if (half >= 52) o.push(ST(cx, cy + 41, 10, `${fx(g.v, 3, " V")} · ${fx(g.load, 0, " %")}`, {c: "--label2"}));
+  else o.push(ST(cx, cy + 28, 9, `${ghz(g.clk)} · ${fx(g.load, 0, " %")}`, {c: "--label2"}));
+  // HBM stacks beside the die on the interposer
+  for (let i = 0; i < hbm; i++) {
+    const side = i % 2 ? 1 : -1, row = hbm > 2 ? Math.floor(i / 2) : .5, sh = hbm > 2 ? half - 4 : 2 * half - 8;
+    const x = cx + side * (half + 6) - (side < 0 ? 40 : 0), y = cy - half + 4 + (hbm > 2 ? row * (sh + 8) : 0);
+    o.push(cellRect(x, y, 40, sh, g.mem_j, 3));
+    o.push(ST(x + 20, y + sh / 2 + 4, 9, def.mem, {c: "--label2", w: 600}));
+  }
+  // Navi 31 / 32 MCDs (memory cache dies) beside the GCD
+  for (let i = 0; i < mcd; i++) {
+    const side = i < Math.ceil(mcd / 2) ? -1 : 1, k = side < 0 ? i : i - Math.ceil(mcd / 2), n = side < 0 ? Math.ceil(mcd / 2) : Math.floor(mcd / 2);
+    const h = (2 * half - 6 * (n - 1)) / n, x = side < 0 ? cx - dw - 34 : cx + dw + 6, y = cy - half + k * (h + 6);
+    o.push(`<rect x="${x}" y="${y}" width="28" height="${h}" rx="3" class="cell" style="fill:var(--purple);fill-opacity:.18"/>`);
+    o.push(`<text x="0" y="0" font-size="8" font-weight="600" text-anchor="middle" style="fill:var(--label2)" transform="translate(${x + 17} ${y + h / 2}) rotate(-90)">MCD</text>`);
+  }
+  // memory chips around the package: bottom, right, top (and left once there are more than 8)
+  const n = def.chips, chipW = 46, chipH = 36, gap = 8, x0 = cx - pw - 4, x1 = cx + pw + 4, y0 = cy - ph - 6, y1 = cy + ph + 6;
+  const sides = n > 8 ? ["b", "r", "t", "l"] : n > 4 ? ["b", "r", "t"] : ["b", "r"];
+  const per = sides.map((s, i) => Math.floor(n / sides.length) + (i < n % sides.length ? 1 : 0));
+  const keys = Object.keys(m), useKeys = keys.length === n;
+  const rowHalf = Math.max(0, ...sides.map((s, i) => s === "b" || s === "t" ? (per[i] * (chipW + gap) - gap) / 2 : 0));
+  const xr = Math.max(x1 + 10, cx + rowHalf + 6), xl = Math.min(x0 - chipH - 10, cx - rowHalf - chipH - 6);
+  let k = 0;
+  sides.forEach((s, si) => {
+    const cnt = per[si];
+    for (let j = 0; j < cnt; j++) {
+      let x, y, w = chipW, h = chipH;
+      if (s === "b" || s === "t") {
+        const span = cnt * (w + gap) - gap; x = cx - span / 2 + j * (w + gap); y = s === "b" ? y1 + 6 : y0 - h - 6;
+        if (s === "t") y = Math.max(16, y);
+      } else {
+        [w, h] = [chipH, chipW];
+        const span = cnt * (h + gap) - gap; y = cy - span / 2 + j * (h + gap); x = s === "r" ? xr : xl;
+      }
+      const t = useKeys ? m[keys[k]] : g.mem_j;
+      o.push(cellRect(x, y, w, h, t, 3));
+      o.push(ST(x + w / 2, y + h / 2 - 2, 8, useKeys ? keys[k] : def.mem, {c: "--label2", w: 600}));
+      o.push(ST(x + w / 2, y + h / 2 + 11, 11, t == null ? "--" : `${Math.round(t)}°`, {c: heatVar(t), w: 700}));
+      k++;
+    }
+  });
+  // core VRM, left
+  const cols = def.ph > 6 ? 2 : 1, rows = Math.ceil(def.ph / cols), vx = 40, vh = Math.min(236, rows * 22 + 34);
+  const vy = 40 + (236 - vh) / 2;
+  const vw = cols * 46 + 12;
+  o.push(`<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" rx="6" class="cell" style="fill:var(--fill);fill-opacity:.55"/>`);
+  o.push(ST(vx + vw / 2, vy + 14, 9.5, `Core VRM · ${def.ph} ph`, {w: 600}));
+  for (let i = 0; i < def.ph; i++) {
+    const c2 = Math.floor(i / rows), r = i % rows, x = vx + 8 + c2 * 46, y = vy + 22 + r * 22;
+    o.push(`<rect x="${x}" y="${y}" width="36" height="16" rx="2" class="pad"/>`);
+  }
+  o.push(ST(vx + vw / 2, vy + vh - 6, 11, fx(g.core_w, 0, " W"), {w: 700}));
+  // power connectors, top right
+  const pc = def.pwr || [];
+  pc.forEach((p, i) => {
+    const w = p === "16" ? 70 : p === "8" ? 46 : 36, x = 584 - pc.slice(i).reduce((a, q) => a + (q === "16" ? 70 : q === "8" ? 46 : 36) + 6, 0) + 6;
+    o.push(`<rect x="${x}" y="16" width="${w}" height="30" rx="4" class="cell" style="fill:var(--orange);fill-opacity:.2"/>`);
+    o.push(ST(x + w / 2, 35, 10, `${p}-pin`, {w: 600}));
+  });
+  o.push(ST(549, pc.length ? 66 : 34, 13, fx(g.w, 0, " W"), {w: 700}));
+  if (!pc.length) o.push(ST(549, 48, 9, "slot powered", {c: "--label2"}));
+  const memTxt = [def.mem, def.bus ? `${def.bus}-bit` : def.hbm ? `${def.hbm} stacks` : "", def.gb ? `${def.gb} GB` : "", def.clam ? `${def.clam} clamshell` : ""].filter(Boolean).join(" · ");
+  o.push(ST(330, 304, 10, `${memTxt}${memTxt ? " · " : ""}junction ${fx(g.mem_j, 0, " °C")} · ${fx(g.mem_clk, 0, " MHz")}`, {c: "--label2"}));
+  o.push(ST(300, 384, 13, `Board ${fx(g.w, 0, " W")}`, {w: 700}));
+  return o.join("");
+}
+
+function gpuSvg(d) {
+  const def = gpuLayout(d);
+  GPU_DEF = def;
+  return def.tuf ? gpuTuf(d) : gpuBoard(def, d);
+}
+function gpuTuf(d) {
+  // ASUS TUF RTX 4070 Ti Super board as seen from the front (TechPowerUp photo): bracket left, PCIe fingers bottom-left,
+  // 16-pin top-right, core VRM in two groups of 4 left of the die, memory VRM column right, 3 misc inductors on top.
+  const g = d.gpu || {}, m = d.gmem || {}, o = [];
+  o.push(`<rect x="6" y="10" width="588" height="312" rx="10" class="pcb"/>`);
+  // bracket outputs (DP, HDMI, DP, DP)
+  [[36, 40], [96, 44], [160, 40], [222, 40]].forEach(([y, hh]) =>
+    o.push(`<rect x="8" y="${y}" width="24" height="${hh}" rx="3" class="pad"/>`));
+  // PCIe fingers, bottom left
+  o.push(`<rect x="120" y="322" width="226" height="20" rx="2" class="gold"/>`);
+  for (let i = 0; i < 22; i++) o.push(`<rect x="${124 + i * 10}" y="325" width="5" height="14" rx="1" style="fill:var(--card);opacity:.55"/>`);
+  o.push(ST(233, 358, 11, `PCIe slot ${fx(g.slot_w, 0, " W")} · ${fx(g.slot_v, 2, " V")}`, {c: "--label2"}));
+  // mounting holes
+  for (const [x, y] of [[60, 28], [118, 28], [178, 28], [470, 28], [212, 120], [400, 120], [212, 238], [400, 238], [60, 300], [575, 280]])
+    o.push(`<circle cx="${x}" cy="${y}" r="5" class="pad"/>`);
+  // core VRM (NVVDD): 2 groups of 4 phases (cap | inductor | cap)
+  o.push(`<rect x="64" y="52" width="118" height="236" rx="6" class="cell" style="fill:var(--fill);fill-opacity:.55"/>`);
+  for (let i = 0; i < 8; i++) {
+    const y = 74 + i * 25 + (i >= 4 ? 16 : 0);
+    o.push(`<circle cx="82" cy="${y + 9}" r="7" class="pad"/><rect x="98" y="${y}" width="40" height="19" rx="2" class="pad"/>`);
+    o.push(`<circle cx="156" cy="${y + 9}" r="7" class="pad"/>`);
+  }
+  o.push(ST(123, 66, 10, "NVVDD core", {w: 600}));
+  o.push(ST(123, 282, 12, fx(g.core_w, 0, " W"), {w: 700}));
+  // misc inductors on top (above the memory)
+  for (let i = 0; i < 3; i++) o.push(`<rect x="${238 + i * 52}" y="16" width="30" height="16" rx="2" class="pad"/>`);
+  // memory VRM (FBVDD) column right
+  o.push(`<rect x="452" y="96" width="96" height="176" rx="6" class="cell" style="fill:var(--fill);fill-opacity:.55"/>`);
+  for (let i = 0; i < 4; i++) {
+    const y = 118 + i * 34;
+    o.push(`<circle cx="468" cy="${y + 11}" r="7" class="pad"/><rect x="482" y="${y}" width="36" height="22" rx="2" class="pad"/>`);
+    o.push(`<circle cx="532" cy="${y + 11}" r="7" class="pad"/>`);
+  }
+  o.push(ST(500, 110, 10, "FBVDD mem", {w: 600}));
+  o.push(ST(500, 266, 12, fx(g.fb_w, 0, " W"), {w: 700}));
+  // 16-pin, top right
+  o.push(`<rect x="514" y="16" width="70" height="34" rx="4" class="cell" style="fill:var(--orange);fill-opacity:.2"/>`);
+  o.push(ST(549, 37, 11, "16-pin", {w: 600}));
+  o.push(ST(549, 68, 13, fx(g.hp_w_real, 0, " W"), {w: 700}));
+  o.push(ST(549, 82, 9, `${fx(g.hp_v, 2, " V")} · read ${fx(g.hp_w, 0)}`, {c: "--label2"}));
+  // fan headers, bottom right
+  o.push(`<rect x="470" y="294" width="34" height="16" rx="2" class="pad"/><rect x="512" y="294" width="54" height="16" rx="2" class="pad"/>`);
+  // die (AD103)
+  o.push(`<rect x="246" y="100" width="122" height="122" rx="6" class="die"/>`);
+  o.push(cellRect(262, 116, 90, 90, g.t, 4));
+  o.push(ST(307, 133, 10, "AD103", {c: "--label2", w: 600}));
+  o.push(ST(307, 158, 24, g.t == null ? "--" : `${Math.round(g.t)}°`, {c: heatVar(g.t), w: 700}));
+  o.push(ST(307, 174, 10, `hot spot ${fx(g.hot, 0, "°")}`, {c: heatVar(g.hot)}));
+  o.push(ST(307, 188, 10, ghz(g.clk)));
+  o.push(ST(307, 201, 10, `${fx(g.v, 3, " V")} · ${fx(g.load, 0, " %")}`, {c: "--label2"}));
+  // memory chips, physical positions from owner 2026-11-08: bottom row left -> right A0 A1 B0, right column
+  // bottom -> top B1 C0 C1, top row left -> right D1 D0
+  const chips = ["A0", "A1", "B0", "B1", "C0", "C1", "D0", "D1"];
+  const pos = [[246, 238], [302, 238], [358, 238], [380, 192], [380, 146], [380, 100], [318, 46], [262, 46]];
+  chips.forEach((k, i) => {
+    const [x, y] = pos[i], t = m[k];
+    o.push(cellRect(x, y, 52, 42, t, 3));
+    o.push(ST(x + 26, y + 14, 10, k, {c: "--label2", w: 600}));
+    o.push(ST(x + 26, y + 33, 15, t == null ? "--" : `${Math.round(t)}°`, {c: heatVar(t), w: 700}));
+  });
+  o.push(ST(330, 302, 10, `GDDR6X · junction ${fx(g.mem_j, 0, " °C")} · ${fx(g.mem_clk, 0, " MHz")} · ${fx(g.mem_load, 0, " %")} load`, {c: "--label2"}));
+  o.push(ST(300, 384, 13, info.standalone || g.w_raw == null || Math.abs(g.w - g.w_raw) < 1 ? `Board ${fx(g.w, 0, " W")}`
+                                                   : `Board ${fx(g.w, 0, " W")} real (card reports ${fx(g.w_raw, 0, " W")})`, {w: 700}));
+  return o.join("");
+}
+
+function renderHw() {
+  const d = pc.d || {};
+  const ok = (pc.status === "ok" || pc.status === "demo") && d.core;
+  $("cpuHwSrc").textContent = ok ? (pc.status === "demo" ? "HWiNFO (demo)" : srcName()) : (pc.status || "no data");
+  $("cpuSvg").innerHTML = cpuSvg(ok ? d : {});
+  $("cpuName").textContent = ((d.cpu || {}).name || CPU_DEF.label).replace(/^(intel|amd)\s+/i, "").replace(/\s+\d+-core processor$/i, "");
+  $("gpuSvg").innerHTML = gpuSvg(ok ? d : {});
+  $("gpuName").textContent = GPU_DEF.generic ? GPU_DEF.label : GPU_DEF.label.replace(/^(GeForce|Radeon)\s+/, "");
+  $("gpuNote").textContent = GPU_DEF.tuf && !info.standalone ? "16-pin shunt-corrected" : [GPU_DEF.chip, GPU_DEF.mem].filter(x => x && x !== "GPU").join(" · ");
+  mbLive(ok ? d : {});
+  ocRender();
+}
+
+// ---------- motherboard card: ROG Maximus Z890 Apex ----------
+// A simplified outline of the board traced from the product photo (photo px -> PDF pt: x = 62 + px / 3.78,
+// y = 78 + py / 3.785; header positions from the manual, page 18), drawn at 2 px / pt. Built once (mbBuild); every
+// second only the live layer (temperature shading, values, tooltips) and the fan rotor speeds change.
+// Fan / pump roles: FanControl controls 0..6 = HWiNFO fan order (Chassis1, CPU, Chassis2, EF, AUX, W_PUMP+, AIO Pump)
+// -> Fan #1 top exhaust, #2 rear 120 rad, #3 front 360 rad, #6 P1, #7 PSU (ASSUMED from that order).
+// The SSD (Kingston Fury Renegade, C:) is drawn under the M.2_1 heatsink (slot ASSUMED).
+// 8-pin power is an estimate: the Apex has no 12 V input current sensor, so EPS W = VR VCC output (SVID) / EPS_EFF.
+const MBX = x => (x - 50) * 2, MBY = y => (y - 60) * 2;
+const EPS_EFF = 0.90;
+// [HWiNFO fan, header, short, role, x0, y0, x1, y1, label side (t = above the board, r = right of it), max rpm]
+const MB_HDR = [
+  ["AUXFANIN2", "FS_FAN1", "FS1", "", 97, 82, 111, 88, "t", 3000],
+  ["CPU", "CPU_FAN", "CPU", "rear 120 rad", 199, 83, 213, 89, "t", 3000],
+  ["CPU_OPT", "CPU_OPT", "OPT", "", 214, 83, 228, 89, "t", 3000],
+  ["Chassis1", "CHA_FAN1", "CHA1", "top exhaust", 236, 82, 242, 96, "t", 3000],
+  ["AIO Pump", "AIO_PUMP", "AIO", "PSU fan", 286, 82, 300, 88, "t", 3000],
+  ["Extra Flow Fan", "EF_FAN", "EF", "", 304, 252, 310, 266, "r", 3000],
+  [null, "FS_FAN2", "FS2", "", 297, 357, 310, 363, "r", 3000],
+  ["W_PUMP+", "W_PUMP+", "W_PUMP+", "P1 · D5 pump", 297, 375, 310, 381, "r", 4800],
+  ["Chassis2", "CHA_FAN2", "CHA2", "front 360 rad", 287, 387, 300, 393, "r", 3000],
+];
+const MB_TOPX = {CPU_FAN: 182, CHA_FAN1: 236, AIO_PUMP: 291};   // label x of the rotors above the board
+let mbBuilt = false, mbRpmShown = {}, mbPk = {}, mbPkSince = Date.now();
+
+function mbR(x0, y0, x1, y1, a = "") {
+  return `<rect x="${MBX(x0)}" y="${MBY(y0)}" width="${(x1 - x0) * 2}" height="${(y1 - y0) * 2}" ${a}/>`;
+}
+function mbP(pts, cls = "mbo") {           // polygon from [x, y] pairs in PDF points
+  return `<path d="M${pts.map(([x, y]) => `${MBX(x)} ${MBY(y)}`).join(" L")} Z" class="${cls}"/>`;
+}
+function mbRotor(i, cx, cy, r = 7) {
+  let b = "";
+  for (let k = 0; k < 5; k++) b += `<path d="M0 0 C ${r * .25} ${-r * .35} ${r * .55} ${-r * .95} 0 ${-r} C ${-r * .35} ${-r * .8} ${-r * .3} ${-r * .3} 0 0Z" transform="rotate(${k * 72})"/>`;
+  return `<g transform="translate(${cx} ${cy})"><circle r="${r + 1.5}" class="mbrotring"/><g class="mbspin" id="mbRot${i}"><circle r="${r}" class="mbspinbox"/>${b}</g>` +
+         `<circle r="${r * .28}" class="mbhub"/></g>`;
+}
+
+function mbBuild() {
+  const o = [];
+  o.push(`<g id="mbHeat"></g>`);                       // temperature shading (live), under the outlines
+  o.push(mbR(62, 78, 316, 395, `rx="11" class="mbedge"`));
+  // I/O cover: MAXIMUS + the five light slashes
+  o.push(mbR(62, 78, 92, 247, `rx="5" class="mbo"`));
+  o.push(`<text transform="translate(${MBX(77) + 8} ${MBY(162)}) rotate(90)" class="mbmax" text-anchor="middle">MAXIMUS</text>`);
+  for (let i = 0; i < 5; i++) o.push(`<path d="M${MBX(86)} ${MBY(149 + i * 11)} L${MBX(103)} ${MBY(143 + i * 11)}" class="mbrgbo"/>`);
+  // VRM heatsinks: left (ROG, letters upright and stacked as on the board), top, and the bar under the socket
+  o.push(mbP([[92, 100], [148, 100], [152, 104], [152, 223], [147, 223], [147, 239], [92, 239]]));
+  ["R", "O", "G"].forEach((ch, i) => o.push(`<text x="${MBX(121)}" y="${MBY(139 + i * 21)}" class="mbrog" text-anchor="middle">${ch}</text>`));
+  o.push(mbP([[163, 84], [247, 84], [247, 126], [171, 126], [156, 113], [156, 100], [163, 95]]));
+  o.push(mbP([[152, 223], [247, 223], [247, 237], [147, 237], [147, 223]]));
+  // VRM power stages (shaded live), EPS 8-pins
+  for (let i = 0; i < 6; i++) o.push(mbR(172 + i * 6.6, 128, 177.5 + i * 6.6, 138, `rx="1.2" class="mbo2"`));
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) o.push(mbR(155 + j * 8, 149 + i * 9, 162 + j * 8, 156.5 + i * 9, `rx="1.2" class="mbo2"`));
+  o.push(mbR(124, 87, 141, 98, `rx="2" class="mbo"`) + mbR(143, 87, 160, 98, `rx="2" class="mbo"`));
+  // socket: frame, IHS window, lever
+  o.push(mbR(177, 139, 229, 211, `rx="4" class="mbo"`));
+  o.push(mbR(184, 155, 221, 204, `rx="3" class="mbo2"`));
+  o.push(`<path d="M${MBX(226.5)} ${MBY(152)} V${MBY(206)} q0 ${7} ${-7} ${7} H${MBX(212)}" class="mbo2"/>`);
+  // DIMM slots, DIMM.2, START / FlexKey, 24-pin
+  [250, 261.5].forEach(x => o.push(mbR(x, 89, x + 9, 248, `rx="2" class="mbo"`)));
+  o.push(mbR(275, 115, 285, 247, `rx="2" class="mbo2"`));
+  o.push(`<circle cx="${MBX(305)}" cy="${MBY(121)}" r="11" class="mbo"/><circle cx="${MBX(305)}" cy="${MBY(136)}" r="8" class="mbo2"/>`);
+  o.push(mbR(300, 162, 311.5, 216, `rx="2" class="mbo"`));
+  // M.2 heatsink (SSD under it), APEX shroud, PCIe x16 #1, ROG shroud with the eye, PCIe x16 #2
+  o.push(mbR(88.5, 241, 226, 261, `rx="4" class="mbo"`));
+  o.push(mbP([[155, 265.5], [299, 265.5], [299, 301], [228.5, 301], [224, 289], [155, 289]]));
+  o.push(`<text x="${MBX(190)}" y="${MBY(281.5)}" class="mbapex" text-anchor="middle">APEX</text>`);
+  o.push(mbR(112, 290, 203, 300, `rx="2" class="mbo"`));
+  o.push(mbR(88.5, 302, 299, 366, `rx="4" class="mbo"`));
+  o.push(mbP([[196, 366], [238, 334], [299, 320], [299, 333], [262, 342], [299, 349], [299, 366]], "mbo2"));
+  o.push(mbR(112, 371.5, 200, 382, `rx="2" class="mbo2"`));
+  // fan / pump headers + rotors outside the board
+  MB_HDR.forEach(([k, n, sh, role, x0, y0, x1, y1, side], i) => {
+    o.push(`<g>${mbR(x0, y0, x1, y1, `rx="1.2" class="mbhdr" id="mbHdr${i}"`)}<title>${n}${role ? " · " + role : ""}</title></g>`);
+    if (!role) return;
+    if (side === "t") {
+      const rx = MBX(MB_TOPX[n]) - 12, ry = 18;
+      o.push(`<path d="M${MBX((x0 + x1) / 2)} ${MBY(y0)} V${ry + 13} H${rx} V${ry + 9}" class="mblead" id="mbLead${i}"/>`);
+      o.push(mbRotor(i, rx, ry));
+    } else {
+      const cy = MBY((y0 + y1) / 2), cx = MBX(316) + 18;
+      o.push(`<path d="M${MBX(x1)} ${cy} H${cx - 9}" class="mblead" id="mbLead${i}"/>`);
+      o.push(mbRotor(i, cx, cy));
+    }
+  });
+  o.push(`<g>${mbR(283, 375, 291, 381, `rx="1.2" class="mbhdr" id="mbTsen"`)}<title>T_SENSOR · cube NTC</title></g>`);
+  o.push(`<g id="mbLive"></g>`);
+  $("mbSvg").innerHTML = o.join("");
+  mbBuilt = true;
+}
+
+const mbBench = () => !!(prog && prog.p === "bench");
+function mbEps(d) {
+  const w = ((d.oc || {}).vr_w != null ? d.oc.vr_w : (d.vrm || {}).w);
+  return w == null ? null : w / EPS_EFF;
+}
+function mbPeaks(d) {                       // session peaks for the overclocking view
+  const cpu = d.cpu || {}, vrm = d.vrm || {}, oc = d.oc || {}, mb = d.mb || {}, ssd = d.ssd || {};
+  const hi = (k, v) => { if (v != null && (mbPk[k] == null || v > mbPk[k])) mbPk[k] = v; };
+  const lo = (k, v) => { if (v != null && (mbPk[k] == null || v < mbPk[k])) mbPk[k] = v; };
+  hi("pkg_t", cpu.pkg_t); hi("max_t", cpu.max_t); hi("vrm_t", cpu.vrm_t); hi("pkg_w", cpu.pkg_w);
+  hi("vr_a", oc.vr_a); hi("eps", mbEps(d)); hi("vout", vrm.v); hi("ssd_t", ssd.t); lo("v12", mb.v12); hi("v12hi", mb.v12);
+}
+
+// 2026-11-22: the board is drawn by boards.js from a definition (the one picked on /setup, else the detected one,
+// else the generic ATX board); this card only feeds it data and keeps the side panel.
+let mbDef = null;
+const MB_ROLES = { CPU_FAN: "rear 120 rad", CPU: "rear 120 rad", CHA_FAN1: "top exhaust", Chassis1: "top exhaust",
+  CHA_FAN2: "front 360 rad", Chassis2: "front 360 rad", AIO_PUMP: "PSU fan", "AIO Pump": "PSU fan", "W_PUMP+": "P1 · D5 pump" };
+(async () => {
+  let id = "";
+  try { id = (await (await fetch("/prefs")).json()).board; } catch (e) {}
+  if (!id || !PCSBoard.boards[id]) {
+    try { const b = await (await fetch("/board/detect")).json(); id = PCSBoard.match([b.maker, b.product].join(" · ")); } catch (e) {}
+  }
+  mbDef = PCSBoard.boards[id] || PCSBoard.boards["generic-atx"];
+  $("mbTitle").textContent = "Motherboard · " + mbDef.name;
+  mbBuilt = false;
+})();
+function mbLive(d) {
+  const pchT = mbPchMax(d.pch || {}), eps = mbEps(d), bench = mbBench();
+  if (d.cpu) mbPeaks(d);
+  if (mbDef) {
+    if (!mbBuilt) { PCSBoard.draw($("mbSvg"), mbDef); mbBuilt = true; }
+    PCSBoard.update($("mbSvg"), d, { roles: info.standalone ? {} : MB_ROLES });   // roles are this PC's
+  }
+  mbSide(d, pchT, eps, bench);
+}
+function mbPchMax(pch) {
+  const v = ["t", "t2", "t3", "t4"].map(k => pch[k]).filter(x => x != null);
+  return v.length ? Math.max(...v) : null;
+}
+// readout tiles (HTML), wrap under the board when the window is narrow. Benchmark adds the overclocking section.
+function mbSide(d, pchT, eps, bench) {
+  const mb = d.mb || {}, cpu = d.cpu || {}, vrm = d.vrm || {}, pch = d.pch || {}, fan = d.fan || {}, mem = d.mem || {},
+        dimm = d.dimm || {}, dK = info.standalone ? Object.keys(dimm).sort((a, b) => a - b) : ["2", "0"],   // other PCs: any slots
+        dA = dimm[dK[0]] || {}, dB = dimm[dK[1]] || {}, ssd = d.ssd || {}, oc = d.oc || {},
+        lim = d.lim || {}, thr = d.thr || {}, dl = d.dlvr || {}, whea = d.whea || {}, core = d.core || {};
+  const bar = (v, max, col) => `<div class="mbbar"><i style="width:${v == null ? 0 : Math.max(2, Math.min(100, v / max * 100))}%;background:var(${col})"></i></div>`;
+  const tile = (k, v, col, sub, extra = "", cls = "") =>
+    `<div class="mbt ${cls}"><div class="mbk">${k}</div><div class="mbv" style="color:var(${col || "--label"})">${v}</div>` +
+    `${sub ? `<div class="mbs">${sub}</div>` : ""}${extra}</div>`;
+  const C = u => `<small> ${u}</small>`;
+  const row = (k, v, em = "", c = "") => `<div class="mbrr"><span>${k}</span><b>${v}</b><em${c ? ` style="color:var(${c})"` : ""}>${em}</em></div>`;
+  const list = (k, rows, cls = "") => `<div class="mbt ${cls}"><div class="mbk">${k}</div><div class="mbrails">${rows.join("")}</div></div>`;
+  const t = [];
+  t.push(tile("CPU socket", fx(mb.cpu_t, 0, C("°C")), heatVar(mb.cpu_t), `package ${fx(cpu.pkg_t, 0, " °C")} · ${fx(cpu.pkg_w, 0, " W")}`, bar(cpu.pkg_t, 100, heatVar(cpu.pkg_t))));
+  t.push(tile("VRM", fx(cpu.vrm_t, 0, C("°C")), heatVar(cpu.vrm_t), `VR VCC ${fx(cpu.vr_t, 0, " °C")} · ${fx(vrm.w, 0, " W")} out`, bar(cpu.vrm_t, 100, heatVar(cpu.vrm_t))));
+  const sa = !!info.standalone;                                  // monitor build: nothing of this PC's board / drives / fans
+  if (!sa) t.push(tile("8-pin CPU power", `≈ ${fx(eps, 0, C("W"))}`, null, "estimate from the VRM output", bar(eps, 300, "--orange")));
+  t.push(tile(sa ? "Chipset" : "Chipset Z890",fx(pchT, 0, C("°C")), heatVar(pchT), `PCH ${["t", "t2", "t3", "t4"].map(k => fx(pch[k], 0)).join(" · ")}`, bar(pchT, 100, heatVar(pchT))));
+  const ssdSub = ssd.t == null ? (sa ? "" : "not shared: show the KINGSTON readings in HWiNFO")
+    : [ssd.life != null ? `${fx(ssd.life, 0)} % life` : null, ssd.rd != null ? `R ${fx(ssd.rd, 0)} · W ${fx(ssd.wr, 0)} MB/s` : null].filter(Boolean).join(" · ") || (sa ? "" : "Fury Renegade 2 TB");
+  t.push(tile("SSD · C:", fx(ssd.t, 0, C("°C")), heatVar(ssd.t), ssdSub, bar(ssd.t, 80, heatVar(ssd.t))));
+  t.push(tile(info.standalone ? "T_SENSOR" : "T_SENSOR · cube", fx(mb.tsen, 0, C("°C")), heatVar(mb.tsen), info.standalone ? "header probe" : "coolant into the PC", bar(mb.tsen, 50, heatVar(mb.tsen))));
+  t.push(tile("Memory", mem.clk == null ? "--" : `DDR5-${Math.round(mem.clk * 2 / 100) * 100}`, null,
+    `${["Tcas", "Trcd", "Trp", "Tras"].map(k => fx(mem[k], 0)).join("-")} · ${fx(mem["Command Rate"], 0)}T · Gear ${fx(mem["Gear Mode"], 0)}`,
+    `<div class="mbdimms">` + [["A", dA], ["B", dB]].map(([n, q]) =>
+      `<div><span>DIMM_${n}</span><b style="color:var(${heatVar(q.t)})">${fx(q.t, 1, "°")}</b><span>${fx(q.w, 1, " W")} · ${fx(q.vdd, 2, " V")}</span></div>`).join("") + `</div>`, "wall"));
+  // monitor build: every fan the sensors report, by its own name (no roles); this PC: the Apex headers with their roles
+  const fanRows = sa ? Object.keys(fan).filter(k => fan[k] != null).sort((a, b) => a.localeCompare(b, undefined, {numeric: true})).map(k => [k, k, "", "", 3000])
+                     : MB_HDR.filter(h => h[0] && h[3]).map(([k, n, sh, role, , , , , , max]) => [k, n, role, sh, max]);
+  const fr = fanRows.map(([k, n, role, , max]) => {
+    const rpm = fan[k], on = rpm != null && rpm > 0;
+    return `<div class="mbfr${on ? " on" : ""}"><span class="mbfn">${n}</span><span class="mbfrole">${role}</span>` +
+      `${bar(rpm, max, on ? "--blue" : "--label3")}<span class="mbfrpm">${rpm == null ? "--" : Math.round(rpm)}<small> rpm</small></span></div>`;
+  }).join("");
+  t.push(`<div class="mbt wall"><div class="mbk">Fans &amp; pumps</div>${fr}</div>`);
+
+  const u = [];
+  if (bench) {
+    // ---- overclocking view (Benchmark)
+    u.push(`<div class="mbsec">Overclocking <span>Benchmark mode · peaks since ${new Date(mbPkSince).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", hourCycle: "h23"})} · <a href="#" data-mb="reset">reset</a></span></div>`);
+    // limits: anything active except "Max Turbo Limit" (that one just means the cores sit at their top ratio)
+    const act = Object.entries(lim).filter(([k, v]) => v >= 1 && !/Max Turbo Limit/.test(k)).map(([k]) => k);
+    const thrN = Object.values(thr).filter(v => v >= 1).length;
+    if (thrN) act.unshift(`${thrN} core${thrN > 1 ? "s" : ""} thermal throttling`);
+    const turbo = lim["IA: Max Turbo Limit"] >= 1;
+    u.push(`<div class="mbt wall"><div class="mbk">Limits</div><div class="mbchips">` +
+      (act.length ? act.map(a => `<span class="mbchip warn">${a}</span>`).join("")
+                  : `<span class="mbchip ok">No throttling · no power or current limit</span>`) +
+      (turbo ? `<span class="mbchip">at max turbo ratio</span>` : "") +
+      `<span class="mbchip">PL1 ${fx(oc.pl1, 0, " W")} · PL2 ${fx(oc.pl2, 0, " W")}</span>` +
+      (Object.keys(whea).length ? `<span class="mbchip ${Object.values(whea).some(v => v > 0) ? "warn" : "ok"}">WHEA ${Object.values(whea).reduce((a, b) => a + b, 0)}</span>` : "") +
+      `</div></div>`);
+    const pMax = Math.max(...P_ORDER.map(n => (core[n] || {}).eclk).filter(v => v != null), 0) || null;
+    const pClk = Math.max(...P_ORDER.map(n => (core[n] || {}).clk).filter(v => v != null), 0) || null;
+    u.push(list("Vcore &amp; VR", [
+      row("Vcore out (VRM)", fx(vrm.v, 3, " V"), `peak ${fx(mbPk.vout, 3)}`),
+      row("Latch min / max", `${fx(oc.latch_Min, 3)} / ${fx(oc.latch_Max, 3)} V`, `Δ ${fx(oc.latch_delta, 3)}`),
+      row("VR VCC current", fx(oc.vr_a, 0, " A"), `peak ${fx(mbPk.vr_a, 0)}`),
+      row("VR VCC power", fx(oc.vr_w, 0, " W"), `8-pin ≈ ${fx(eps, 0)}`),
+      row("VRM · VR VCC temp", `${fx(cpu.vrm_t, 0)} · ${fx(cpu.vr_t, 0, " °C")}`, `peak ${fx(mbPk.vrm_t, 0)}`),
+      row("Uncore VID", fx(oc.uncore_vid, 3, " V")),
+    ]));
+    u.push(list("Clocks", [
+      row("BCLK", fx(oc.bclk, 2, " MHz")),
+      row("P-core max", ghz(pClk), `eff ${ghz(pMax)}`),
+      row("Average effective", ghz(oc.avg_eclk)),
+      row("Ring / LLC", ghz(cpu.ring_clk), `max ${fx(oc.ring_ratio, 0)}×`),
+      row("IA OC ratio limit", fx(oc.ia_ratio, 0, "×")),
+      row("Package peak", fx(mbPk.pkg_t, 0, " °C"), `core ${fx(mbPk.max_t, 0)}`, heatVar(mbPk.pkg_t)),
+    ]));
+    u.push(list("CPU voltages", [
+      row("P-core 0 / 7 DLVR", `${fx(dl["P-core 0"], 3)} / ${fx(dl["P-core 7"], 3)} V`),
+      row("E-cluster 0 / 3 DLVR", `${fx(dl["E-core Cluster0"], 3)} / ${fx(dl["E-core Cluster3"], 3)} V`),
+      row("Ring DLVR", fx(cpu.ring_v, 3, " V")),
+      row("VCCSA", fx(mb.vccsa, 3, " V")),
+      row("IMC VDD", fx(mb.imc, 3, " V")),
+      row("VCCIO", fx(mb.vccio, 3, " V")),
+    ]));
+    const pmic = q => ["High Temperature", "Over Voltage", "Under Voltage"].filter(k => q["pmic " + k] >= 1);
+    const pm = [...pmic(dA).map(x => "A " + x), ...pmic(dB).map(x => "B " + x)];
+    u.push(list("Memory", [
+      row("Timings", `${["Tcas", "Trcd", "Trp", "Tras"].map(k => fx(mem[k], 0)).join("-")}`, `${fx(mem["Command Rate"], 0)}T · G${fx(mem["Gear Mode"], 0)}`),
+      row("tRC · tRFC", `${fx(mem.Trc, 0)} · ${fx(mem.Trfc, 0)}`),
+      row("VDD A / B", `${fx(dA.vdd, 3)} / ${fx(dB.vdd, 3)} V`),
+      row("VDDQ A / B", `${fx(dA.vddq, 3)} / ${fx(dB.vddq, 3)} V`),
+      row("VPP A / B", `${fx(dA.vpp, 2)} / ${fx(dB.vpp, 2)} V`),
+      row("VccDDQ · VccIOG", `${fx(mem.VccDDQ, 3)} · ${fx(mem.VccIOG, 3)} V`),
+      row("VccCLK", fx(mem.VccCLK, 3, " V")),
+      row("PMIC", pm.length ? pm.join(", ") : "ok", "", pm.length ? "--red" : "--green"),
+    ]));
+    const rail = (n, v, nom, dd = 3) => {
+      const dev = v == null ? null : (v - nom) / nom * 100, c = dev == null ? "" : Math.abs(dev) < 3 ? "--green" : Math.abs(dev) < 5 ? "--orange" : "--red";
+      return row(n, fx(v, dd, " V"), dev == null ? "" : (dev >= 0 ? "+" : "") + dev.toFixed(1) + " %", c);
+    };
+    u.push(list("Rails", [
+      rail("+12V", mb.v12, 12), row("+12V min / max", `${fx(mbPk.v12, 3)} / ${fx(mbPk.v12hi, 3)} V`, mbPk.v12 != null && mbPk.v12hi != null ? `droop ${fx((mbPk.v12hi - mbPk.v12) * 1000, 0)} mV` : ""),
+      rail("+5V", mb.v5, 5), rail("3.3V", mb.v33, 3.3), rail("CMOS battery", mb.bat, 3.0, 2),
+      row("CPU energy", fx(mb.kwh, 2, " kWh")),
+    ]));
+  }
+  $("mbSide").innerHTML = t.join("");
+  const sec = u.shift() || "";
+  $("mbOc").innerHTML = bench ? sec + `<div class="mbocg">${u.join("")}</div>` : "";
+}
+$("mbOc").addEventListener("click", e => {
+  const a = e.target.closest("a[data-mb]");
+  if (!a) return;
+  e.preventDefault();
+  mbPk = {}; mbPkSince = Date.now();
+});
+
+// ---------- sparkline ----------
+function drawSpark(id, pts, color) {
+  const c = $(id), dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (c.width !== W * dpr) { c.width = W * dpr; c.height = H * dpr; }
+  const g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  if (pts.length < 2) return;
+  const now = pts[pts.length - 1].t;
+  pts = pts.filter(p => p.t > now - 600);
+  let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
+  if (hi - lo < 1) { const m = (hi + lo) / 2; lo = m - .5; hi = m + .5; }
+  const X = p => (p.t - (now - 600)) / 600 * W, Y = v => H - 3 - (v - lo) / (hi - lo) * (H - 6);
+  sparkPts[id] = {pts, X: t => X({t})};
+  const col = css(color), grad = g.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, col + "40"); grad.addColorStop(1, col + "00");
+  g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(p), Y(p.v)) : g.moveTo(X(p), Y(p.v)));
+  g.lineTo(X(pts[pts.length - 1]), H); g.lineTo(X(pts[0]), H); g.closePath(); g.fillStyle = grad; g.fill();
+  g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(p), Y(p.v)) : g.moveTo(X(p), Y(p.v)));
+  g.strokeStyle = col; g.lineWidth = 2; g.lineJoin = "round"; g.stroke();
+}
+function spark(id, key, color) {
+  const c = $(id), dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (c.width !== W * dpr) { c.width = W * dpr; c.height = H * dpr; }
+  const g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const now = rows.length ? rows[rows.length - 1].t : 0;
+  const pts = rows.filter(r => r.t > now - 600 && r[key] != null);
+  if (pts.length < 2) return;
+  let lo = Math.min(...pts.map(r => r[key])), hi = Math.max(...pts.map(r => r[key]));
+  if (hi - lo < 1) { const m = (hi + lo) / 2; lo = m - .5; hi = m + .5; }
+  const X = r => (r.t - (now - 600)) / 600 * W, Y = v => H - 3 - (v - lo) / (hi - lo) * (H - 6);
+  sparkPts[id] = {pts: pts.map(r => ({t: r.t, v: r[key]})), X: t => X({t})};
+  const col = css(color);
+  const grad = g.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, col + "40"); grad.addColorStop(1, col + "00");
+  g.beginPath(); pts.forEach((r, i) => i ? g.lineTo(X(r), Y(r[key])) : g.moveTo(X(r), Y(r[key])));
+  g.lineTo(X(pts[pts.length - 1]), H); g.lineTo(X(pts[0]), H); g.closePath(); g.fillStyle = grad; g.fill();
+  g.beginPath(); pts.forEach((r, i) => i ? g.lineTo(X(r), Y(r[key])) : g.moveTo(X(r), Y(r[key])));
+  g.strokeStyle = col; g.lineWidth = 2; g.lineJoin = "round"; g.stroke();
+}
+
+// ---------- main chart ----------
+function drawChart() {
+  const c = $("chart"), dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (c.width !== W * dpr || c.height !== H * dpr) { c.width = W * dpr; c.height = H * dpr; }
+  const g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const L = 36, R = 8, T = 8, B = 24, pw = W - L - R, ph = H - T - B;
+  const now = rows.length ? rows[rows.length - 1].t : Date.now() / 1000, t0 = now - win;
+  const vis = rows.filter(r => r.t >= t0);
+  const on = SERIES.filter(s => s.on);
+  let lo = Infinity, hi = -Infinity;
+  for (const r of vis) for (const s of on) { const v = r[s.k]; if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+  if (!isFinite(lo)) { lo = 0; hi = 35; }
+  const span = Math.max(4, hi - lo), step = span > 30 ? 10 : span > 12 ? 5 : 2;
+  lo = Math.floor((lo - 1) / step) * step; hi = Math.ceil((hi + 1) / step) * step;
+  const X = t => L + (t - t0) / win * pw, Y = v => T + ph - (v - lo) / (hi - lo) * ph;
+  g.font = `11px ${css("--font")}`; g.fillStyle = css("--label2"); g.strokeStyle = css("--sep"); g.lineWidth = 1;
+  g.textAlign = "right"; g.textBaseline = "middle";
+  for (let v = lo; v <= hi + 1e-6; v += step) {
+    const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    g.fillText(`${v}°`, L - 6, y);
+  }
+  g.textAlign = "center"; g.textBaseline = "top";
+  const tick = win <= 300 ? 60 : win <= 1800 ? 300 : win <= 7200 ? 1200 : 3600;
+  for (let t = Math.ceil(t0 / tick) * tick; t <= now; t += tick) {
+    const d = new Date(t * 1000);
+    g.fillText(d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", hourCycle: "h23"}), X(t), T + ph + 7);
+  }
+  // decimate to ~1 point per px
+  const stride = Math.max(1, Math.floor(vis.length / pw));
+  for (const s of on) {
+    g.beginPath(); let pen = false, prev = null;
+    for (let i = 0; i < vis.length; i += stride) {
+      const r = vis[i], v = r[s.k];
+      if (v == null || (prev && r.t - prev.t > 5 * stride)) { pen = false; prev = r; if (v == null) continue; }
+      const x = X(r.t), y = Y(v);
+      pen ? g.lineTo(x, y) : g.moveTo(x, y); pen = true; prev = r;
+    }
+    g.strokeStyle = css(s.c); g.lineWidth = s.dash ? 1.5 : 2; g.lineJoin = "round"; g.setLineDash(s.dash ? [5, 4] : []);
+    g.stroke(); g.setLineDash([]);
+  }
+  const tip = $("tip");
+  if (hover != null && vis.length) {
+    const t = t0 + (hover - L) / pw * win;
+    let best = vis[0]; for (const r of vis) if (Math.abs(r.t - t) < Math.abs(best.t - t)) best = r;
+    const x = Math.round(X(best.t)) + .5;
+    g.strokeStyle = css("--label3"); g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ph); g.stroke();
+    for (const s of on) if (best[s.k] != null) {
+      g.beginPath(); g.arc(x, Y(best[s.k]), 4, 0, 7); g.fillStyle = css("--card"); g.fill();
+      g.lineWidth = 2; g.strokeStyle = css(s.c); g.stroke();
+    }
+    tip.innerHTML = `<b>${new Date(best.t * 1000).toLocaleTimeString([], {hourCycle: "h23"})}</b>` + on.map(s =>
+      `<div><span><i style="background:var(${s.c})"></i>${s.name}</span><span>${f1(best[s.k])}°</span></div>`).join("");
+    tip.style.display = "block";
+    const tw = tip.offsetWidth;
+    tip.style.left = (x + 14 + tw > W ? x - 14 - tw : x + 14) + "px"; tip.style.top = "10px";
+  } else tip.style.display = "none";
+}
+
+// ---------- controls ----------
+function legend() {
+  $("legend").innerHTML = SERIES.map((s, i) =>
+    `<button data-i="${i}" class="${s.on ? "" : "off"}"><i style="background:var(${s.c})"></i>${s.name}</button>`).join("");
+}
+$("legend").onclick = e => { const b = e.target.closest("button"); if (!b) return; SERIES[b.dataset.i].on ^= 1; legend(); drawChart(); };
+$("winSeg").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  win = +b.dataset.w; document.querySelectorAll("#winSeg button").forEach(x => x.classList.toggle("on", x === b)); drawChart();
+};
+const cv = $("chart");
+cv.onmousemove = e => { hover = e.offsetX; drawChart(); };
+cv.onmouseleave = () => { hover = null; drawChart(); };
+
+async function send(cmd) {
+  await fetch("/cmd", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({cmd})});
+}
+$("modeSeg").onclick = e => { const b = e.target.closest("button"); if (b) setProg(b.dataset.p); };
+
+// ---------- programs (pcs_prog.py) ----------
+let prog = null;
+async function setProg(p) {
+  try {
+    const res = await fetch("/prog", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({p})});
+    const j = await res.json();
+    if (!j.ok) return ask(p === "extreme" ? "Extreme is in Alpha" : "Not started", j.msg, null);
+    prog = j.prog; renderProg(); render();
+  } catch (e) {}
+}
+function renderProg() {
+  const r = rows[rows.length - 1];
+  const p = prog ? prog.p : "off";
+  // one active button: a firmware mode (4 Overclocking, 5 Daily) wins over the PC program "off" that hands over to it
+  const act = p === "off" && r && r.mode === 4 ? "oc" : p === "off" && r && r.mode === 5 ? "daily" : p;
+  document.querySelectorAll("#modeSeg button").forEach(b => b.classList.toggle("on", b.dataset.p === act));
+  const el = $("progLine");
+  if (!prog) return;
+  const lk = prog.link || {};
+  const linkTxt = lk.ok ? "PC link ok" : `PC link down: ${lk.why}`;
+  const eg = prog.eng || {};
+  if (p === "auto" && eg.on) {
+    const mm = s => `${Math.ceil(s / 60)} min`;
+    const back = eg.hold_s > 0 ? `held ${mm(eg.hold_s)} more`
+      : (eg.low_s != null ? `Passive in ${mm(eg.low_s)}` : `Passive after ${mm(180)} under ${eg.off_w} W`);
+    el.innerHTML = `<b>Auto</b> (engaged by load from Passive) · CPU+GPU ${eg.w ?? "--"} W avg · ${back} · ${linkTxt}` + p1Txt();
+  } else if (p === "auto" || p === "bench")
+    el.innerHTML = `<b>${prog.name}</b> · cube ${prog.target > 0 ? "+" : ""}${prog.target} °C over dew (limit +${prog.limit}) · ${linkTxt}` +
+      p1Txt() + (p === "bench" && !prog.p1_bios ? sweepHtml() : "");
+  else if (p === "manual") el.innerHTML = `<b>Manual</b> · heartbeat to the Mega · ${linkTxt}`;
+  else if (p === "passive") el.innerHTML = `<b>Passive</b> · branch off · PC fans${prog.p1_bios ? "" : " and P1"} follow the load · ` +
+    `Auto above ${eg.on_w ?? 200} W (now ${eg.w ?? "--"} W avg)` + p1Txt();
+  else if (r && r.mode === 4) el.innerHTML = `<b>Overclocking</b> · the Mega holds T2 at ${r.Tset != null ? r.Tset.toFixed(1) : "12.5"} °C on its own (BIOS / crash safe) · LED green → red = dew margin`;
+  else if (r && r.mode === 5) el.innerHTML = dailyTxt(r);
+  else if (r && r.mode !== 1) el.innerHTML = `<b>Firmware Mode ${r.mode}</b> (case button) · ${linkTxt}`;
+  else el.innerHTML = `Branch off · ${linkTxt}`;
+}
+// Daily (firmware Mode 5, owner 2026-11-13): what the Mega holds, the case fans and every guard the PC watches (daily.py)
+function dailyTxt(r) {
+  const dy = (pc.req || {}).daily || {}, f = (x, d = 0) => x == null ? "--" : (+x).toFixed(d);
+  const dew = r.DP != null && r.Tset != null && Math.abs(r.Tset - (r.DP + 4)) < 0.05 ? " (dew-limited)" : "";
+  let h = `<b>Daily</b> · the Mega holds T2 at ${f(r.Tset, 1)} °C${dew} · P2 ${r.pen === 0 ? "off" : f(r.pump) + " %"} · ` +
+    `outdoor fans ${f(r.fan)} % (max 45)`;
+  h += `<br>Case rads <b>${dy.rad > 0 ? `${f(dy.rad)} %` : "off"}</b> · top <b>${f(dy.top)} %</b> · ${dy.why || "waiting for HWiNFO"}` +
+    (dy.flush || !dy.flush_txt ? "" : ` · ${dy.flush_txt}`) + (dy.p1 != null ? ` · P1 <b>${f(dy.p1)} %</b> (${dy.p1_why})` : "");
+  if (dy.behind) h += ` · <span style="color:var(--orange)">T2 over target ${Math.round(dy.behind_s / 60)} min: outdoor loop at its quiet caps</span>`;
+  if (dy.g && dy.g.length) h += "<br>" + dy.g.map(x => {
+    const u = x.k === "air" || x.k === "ret" ? "+" : "";
+    const c = x.hot ? "var(--orange)" : x.v > x.lo - 3 ? "var(--yellow, #c9a227)" : "";
+    return `<span${c ? ` style="color:${c}"` : ""} title="fans from ${x.lo} °C, full at ${x.hi} °C">${x.l} ${u}${f(x.v)}/${x.lo}</span>`;
+  }).join(" · ");
+  return h;
+}
+// P1 on its quiet steps (45 / 62 / 76 / 83 / 91): current step and the 65 °C / 200 W hold
+function p1Txt() {
+  if (prog && prog.p1_bios) {                        // owner 2026-11-13: P1 on the BIOS W_PUMP+ curve
+    const w = pc && pc.v && pc.v.w_pump;
+    return `<br>P1 <b>BIOS</b> (W_PUMP+ curve) · ${w && w.v != null ? w.v.toFixed(0) : "--"} rpm`;
+  }
+  const q = prog && prog.p1;
+  if (!q || q.step == null) return "";
+  return `<br>P1 <b>${q.step} %</b>` + (q.flag ? ` · no 45 % for ${Math.ceil(q.flag_s / 60)} min (${q.why})` : " · fans first up to 55 %");
+}
+// P1 sweep (Benchmark): button + progress + last result table
+function sweepHtml() {
+  const sw = prog.sweep, last = prog.sweep_last;
+  const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  let h = "<br>";
+  if (sw) h += `<b>P1 sweep</b> step ${sw.i + 1}/${sw.n} · P1 ${sw.level} % · ${mmss(sw.left_s)} left in step, ` +
+    `~${Math.ceil(sw.total_left_s / 60)} min total · <a href="#" data-sw="0">stop</a>`;
+  else h += `<a href="#" data-sw="1">Start P1 sweep</a> (45 → 100 %, from 65 % under CPU load; stops above 85 °C CPU; 2 min steps; keep the load steady)`;
+  const res = sw ? sw.res : last && last.res;
+  if (res && res.length) {
+    const f = (x, d = 1) => x == null ? "--" : x.toFixed(d);
+    h += `<table class="swt"><tr><th>P1</th><th>rpm</th><th>CPU</th><th>CPU−cube</th><th>GPU hot</th><th>hot−cube</th><th>cube</th><th>W</th></tr>` +
+      res.map(r => `<tr><td>${r.p1} %</td><td>${f(r.p1_rpm, 0)}</td><td>${f(r.cpu_t)}</td><td>${f(r.cpu_cube)}</td>` +
+        `<td>${f(r.gpu_hot)}</td><td>${f(r.hot_cube)}</td><td>${f(r.cube)}</td><td>${r.w ?? "--"} ±${r.w_sd ?? "--"}</td></tr>`).join("") +
+      `</table>`;
+    if (!sw && last) h += last.why ? `Aborted: ${last.why}` :
+      (last.best ? `Sweet spot ~<b>${last.best} %</b>` : "No clear knee") + ` · logs/${last.file}`;
+  }
+  return h;
+}
+$("progLine").onclick = async e => {
+  const a = e.target.closest("a[data-sw]");
+  if (!a) return;
+  e.preventDefault();
+  const res = await fetch("/sweep", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({on: a.dataset.sw === "1"})});
+  const j = await res.json();
+  if (!j.ok) return ask("P1 sweep", j.msg, null);
+  prog = j.prog; renderProg();
+};
+let askDone = null;
+function ask(title, text, yes) {
+  $("mTitle").textContent = title; $("mText").textContent = text;
+  $("mYes").textContent = yes || "OK"; $("mNo").style.display = yes ? "" : "none";
+  $("modal").classList.add("on");
+  return new Promise(res => { askDone = res; });
+}
+$("mYes").onclick = () => { $("modal").classList.remove("on"); if (askDone) askDone(true); };
+$("mNo").onclick = () => { $("modal").classList.remove("on"); if (askDone) askDone(false); };
+
+// ---------- sparkline hover: time and value (CPU / GPU also W) ----------
+const sparkPts = {};                   // canvas id -> {pts: [{t, v, w}], X, unit}
+function sparkHover(e) {
+  const c = e.currentTarget, s = sparkPts[c.id], tip = $("stip");
+  if (!s || !s.pts.length) return;
+  const x = e.offsetX;
+  let best = s.pts[0];
+  for (const p of s.pts) if (Math.abs(s.X(p.t) - x) < Math.abs(s.X(best.t) - x)) best = p;
+  const tm = new Date(best.t * 1000).toLocaleTimeString([], {hourCycle: "h23"});
+  tip.innerHTML = `<b>${tm}</b> · ${best.v.toFixed(1)} °C` + (best.w != null ? ` · ${Math.round(best.w)} W` : "");
+  tip.style.display = "block";
+  tip.style.left = (e.pageX + 12) + "px"; tip.style.top = (e.pageY - 34) + "px";
+}
+document.querySelectorAll(".spark").forEach(c => {
+  c.addEventListener("mousemove", sparkHover);
+  c.addEventListener("mouseleave", () => { $("stip").style.display = "none"; });
+});
+$("cmdf").onsubmit = e => { e.preventDefault(); const v = $("cmd").value.trim(); if (v) { send(v); $("cmd").value = ""; } };
+$("conChips").onclick = e => { const b = e.target.closest("button"); if (b) send(b.dataset.c); };
+
+function addLog(ev) {
+  const el = $("log"), atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+  const d = document.createElement("div");
+  const tm = new Date(ev.t * 1000).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"});
+  d.textContent = `${tm}  ${ev.text}`;
+  if (ev.text.startsWith(">")) d.className = "me";
+  else if (/FAULT|SAFE|lost|busy/i.test(ev.text)) d.className = "bad";
+  else if (/ALARM ON/.test(ev.text)) d.className = "on";
+  el.appendChild(d);
+  while (el.childNodes.length > 400) el.removeChild(el.firstChild);
+  if (atEnd) el.scrollTop = el.scrollHeight;
+}
+
+// theme: auto → light → dark
+const themes = ["auto", "light", "dark"];
+let theme = "auto";
+try { theme = localStorage.getItem("pcs-theme") || "auto"; } catch (e) {}
+function applyTheme() {
+  if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  if (window.pcsTheme) pcsTheme.apply();
+  $("theme").textContent = theme === "auto" ? "◐" : theme === "light" ? "☀" : "☾";
+  $("theme").title = `Appearance: ${theme}`;
+  render();
+}
+$("theme").onclick = () => { theme = themes[(themes.indexOf(theme) + 1) % 3]; try { localStorage.setItem("pcs-theme", theme); } catch (e) {} applyTheme(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+addEventListener("pcs-theme", () => { try { theme = localStorage.getItem("pcs-theme") || "auto"; } catch (e) {} render(); });
+addEventListener("resize", render);
+
+// ---------- wide layout: fixed 1196 px columns (owner 2026-11-10) ----------
+// Sections in page order: 0 temps, 1 case/room air, 2 CPU/GPU/heat, 3 CPU+GPU drawings, 4 board, 5 dew/valve, 6 fans/pump/12V/
+// health, 7 controls, 8 chart, 9 alarms/console. They are moved between column divs only when the column count changes.
+const FLOW = document.querySelector(".flow");
+const FLOW_SECS = [...FLOW.children];
+const FLOW_COLS = {
+  2: [[0, 1, 2, 3, 8, 9], [4, 5, 6, 7]],
+  3: [[0, 1, 2, 3], [4, 5, 6], [8, 7, 9]],
+};
+let flowN = 1;
+function layoutFlowW(n = flowN) {
+  document.documentElement.style.setProperty("--flow-w", innerWidth - railW() >= 1260 ? (n * 1196 + (n - 1) * 16) + "px" : "none");
+}
+function layoutFlow() {
+  const w = pageW() - parseFloat(getComputedStyle(FLOW.parentElement).paddingLeft) * 2;   // window, not the (scaled) page
+  const n = w >= 3 * 1196 + 2 * 16 ? 3 : w >= 2 * 1196 + 16 ? 2 : 1;
+  layoutFlowW(n);
+  if (n === flowN) return;
+  flowN = n;
+  FLOW_SECS.forEach(sec => FLOW.appendChild(sec));           // back to page order first (out of any old column)
+  [...FLOW.querySelectorAll(".fcol")].forEach(c => c.remove());
+  if (n === 1) {
+    FLOW.classList.remove("cols");
+  } else {
+    FLOW.classList.add("cols");
+    FLOW_COLS[n].forEach(ids => {
+      const col = document.createElement("div");
+      col.className = "fcol";
+      ids.forEach(i => col.appendChild(FLOW_SECS[i]));
+      FLOW.appendChild(col);
+    });
+  }
+  try { render(); } catch (e) {}
+}
+// widest layout: scale the page so it fits the window height, no scrollbar (owner 2026-11-10)
+const MAIN = document.querySelector("body > .wrap");
+["modal", "stip"].forEach(id => document.body.appendChild($(id)));   // overlays stay outside the scaled page
+// Overclocking view: size locked (owner 2026-11-10). The view is laid out at the window size stored the first time it
+// opened (or with "Lock size"); other window sizes only scale it, nothing reflows.
+const ocLockGet = () => { try { return JSON.parse(localStorage.getItem("pcs-oclock")); } catch (e) { return null; } };
+const ocLockSet = L => { try { localStorage.setItem("pcs-oclock", JSON.stringify(L)); } catch (e) {} };
+function fitOc() {
+  const html = document.documentElement, W = pageW();
+  let L = ocLockGet();
+  if (!L || !L.w || !L.h) { L = {w: W, h: innerHeight}; ocLockSet(L); }
+  html.classList.add("fit");
+  // The lock fixes the zoom, not the box: k = how much this window is smaller / larger than the locked one. The page is
+  // laid out at (window / k) and scaled by k, so it always covers the whole window edge to edge (no black bars), and
+  // the view stretches its rows / drawing to fill that height (CSS html.ocmode). At the locked size k = 1.
+  const top = document.querySelector(".topbar").getBoundingClientRect().height;
+  const H = innerHeight - top;
+  const k = Math.min(W / L.w, H / Math.max(100, L.h - top));
+  html.style.setProperty("--flow-w", "none");
+  html.style.setProperty("--oc-h", (H / k).toFixed(1) + "px");
+  MAIN.style.width = (W / k).toFixed(1) + "px";
+  MAIN.style.transform = Math.abs(k - 1) > 0.001 ? `scale(${k.toFixed(4)})` : "";
+}
+function fitFlow() {
+  if (document.documentElement.classList.contains("ocmode")) { fitOc(); return; }
+  const fit = flowN === 3;
+  document.documentElement.classList.toggle("fit", fit);
+  if (!fit) { MAIN.style.transform = ""; MAIN.style.width = ""; document.documentElement.classList.remove("fit"); layoutFlowW(); return; }
+  const top = document.querySelector(".topbar").getBoundingClientRect().height;
+  // Tile size frozen at the 3-column threshold (owner 2026-11-10): the page is laid out as if the window were exactly
+  // that wide; wider windows only add even margins left and right.
+  const W = pageW(), avail = innerHeight - top - 8;
+  const pad = parseFloat(getComputedStyle(MAIN).paddingLeft);
+  const W3 = Math.min(W, 3 * 1196 + 2 * 16 + 2 * pad);      // threshold width
+  let k = 1;
+  for (let i = 0; i < 4; i++) {                             // wider page -> scaled down to the height -> fills W3
+    MAIN.style.width = (W3 / k) + "px";
+    k = Math.min(1, avail / MAIN.scrollHeight);
+  }
+  MAIN.style.width = (W3 / k) + "px";
+  const dx = (W - W3) / 2;                                  // centre it
+  document.documentElement.style.setProperty("--flow-w", W3 + "px");   // top bar lines up with the page
+  MAIN.style.transform = `translateX(${dx.toFixed(1)}px)` + (k < 1 ? ` scale(${k.toFixed(4)})` : "");
+}
+addEventListener("resize", () => requestAnimationFrame(() => { layoutFlow(); fitFlow(); }));
+layoutFlow();
+fitFlow();
+setInterval(fitFlow, 2000);                                   // content height changes as data comes in
+
+// ---------- Overclocking view (owner 2026-11-10): while the Mega runs Mode 4 only CPU + cooling, CPU drawing bigger ----------
+// The CPU card is moved into the view (and back on "Full view"). Min / max are kept in the page since the view opened.
+let ocPref = "cpu", ocOn = false, ocPk = {}, ocSince = Date.now(), ocPcT = 0, ocLm = {};
+try { ocPref = localStorage.getItem("pcs-ocview") || "cpu"; } catch (e) {}
+const CPU_CARD = $("cpuSvg").closest(".card"), CPU_HOME = CPU_CARD.parentElement;
+function ocApply() {
+  const r = rows[rows.length - 1];
+  const m4 = !!(r && r.mode === 4);
+  document.documentElement.classList.toggle("oc4", m4);
+  document.querySelectorAll("#ocSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === ocPref));
+  const on = m4 && ocPref === "cpu";
+  if (on === ocOn) return on;
+  ocOn = on;
+  document.documentElement.classList.toggle("ocmode", on);
+  if (on) { $("ocCpuSlot").appendChild(CPU_CARD); ocPk = {}; ocSince = Date.now(); }
+  else CPU_HOME.insertBefore(CPU_CARD, CPU_HOME.firstChild);
+  try { fitFlow(); } catch (e) {}
+  return on;
+}
+$("ocSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.v === "lock") { ocLockSet({w: pageW(), h: innerHeight}); fitFlow(); return; }
+  ocPref = b.dataset.v; try { localStorage.setItem("pcs-ocview", ocPref); } catch (e) {}
+  ocApply(); ocRender(); render();
+});
+$("ocReset").onclick = e => { e.preventDefault(); ocPk = {}; ocLm = {}; ocSince = Date.now(); ocRender(); };
+function ocMM(k, v) {
+  if (v == null || isNaN(v)) return;
+  const q = ocPk[k] || (ocPk[k] = {lo: v, hi: v});
+  if (v < q.lo) q.lo = v;
+  if (v > q.hi) q.hi = v;
+}
+const ocLo = k => ocPk[k] ? ocPk[k].lo : null, ocHi = k => ocPk[k] ? ocPk[k].hi : null;
+function ocRender() {
+  if (!ocApply()) return;
+  const r = rows[rows.length - 1] || {}, v = pc.v || {}, g = k => v[k] ? v[k].v : null, rq = pc.req || {};
+  const d = (pc.status === "ok" || pc.status === "demo") ? (pc.d || {}) : {};
+  const c = d.core || {}, cpu = d.cpu || {}, oc = d.oc || {}, mb = d.mb || {}, vrm = d.vrm || {}, mem = d.mem || {},
+        dimm = d.dimm || {}, lim = d.lim || {}, thr = d.thr || {}, voff = d.voff || {}, dl = d.dlvr || {}, whea = d.whea || {};
+  if (pc.t && pc.t !== ocPcT) {               // one sample per HWiNFO read
+    ocPcT = pc.t;
+    Object.entries(c).forEach(([n, q]) => { ocMM("t" + n, q.t); ocMM("v" + n, q.v); ocMM("c" + n, q.clk); });
+    ocMM("pkg_t", cpu.pkg_t); ocMM("max_t", cpu.max_t); ocMM("pkg_w", cpu.pkg_w); ocMM("vcore", cpu.vcore); ocMM("vout", vrm.v);
+    ocMM("vr_a", oc.vr_a); ocMM("ring_v", cpu.ring_v); ocMM("vrm_t", cpu.vrm_t); ocMM("v12", mb.v12); ocMM("vccsa", mb.vccsa);
+    ocMM("cube", g("t_sensor"));
+    // contact / liquid-metal watch: P0 / P1 minus the other six P-cores, hottest core minus the cube (60 s average
+    // under load, package > 150 W, so idle noise doesn't count)
+    const pt = P_ORDER.map(n => (c[n] || {}).t);
+    if (pt.every(x => x != null) && cpu.pkg_w != null && cpu.pkg_w > 150) {
+      const rest = pt.slice(2).reduce((a, b) => a + b, 0) / 6, cube = g("t_sensor");
+      const ema = (k, x) => { if (x == null) return; ocLm[k] = ocLm[k] == null ? x : ocLm[k] + (x - ocLm[k]) / 60; ocMM("lm_" + k, x); };
+      ema("p0", pt[0] - rest); ema("p1", pt[1] - rest);
+      if (cpu.max_t != null && cube != null) { ema("cc", cpu.max_t - cube); ema("w", cpu.pkg_w); }
+    }
+  }
+  const C = u => `<small> ${u}</small>`;
+  const tile = (k, val, sub, col) => `<div class="mbt"><div class="mbk">${k}</div><div class="mbv" style="color:var(${col || "--label"})">${val}</div><div class="mbs">${sub || "&nbsp;"}</div></div>`;
+  const tc = t => t == null ? "--" : `${t.toFixed(1)}${C("°C")}`;
+  const sg = x => x == null ? "--" : (x >= 0 ? "+" : "") + x.toFixed(1);
+  const cube = g("t_sensor");
+  const caseVals = [r.T_A, r.T_B].filter(x => x != null), caseRH = [r.RH_A, r.RH_B].filter(x => x != null);
+  const caseT = caseVals.length ? Math.max(...caseVals) : null, caseH = caseRH.length ? Math.max(...caseRH) : null;
+  const mCube = cube != null && r.DP != null ? cube - r.DP : null, mT2 = r.T2 != null && r.DP != null ? r.T2 - r.DP : null;
+  const mCol = m => m == null ? null : m < 2 ? "--red" : m < 4 ? "--orange" : "--green";
+  const rpm = k => g(k) == null ? "--" : Math.round(g(k));
+  $("ocStrip").innerHTML = [
+    (([cls, it, is]) => `<div class="mbt"><div class="mbk">Cooling</div><div class="mbv" style="font-size:19px;white-space:nowrap"><span class="intent ${cls}" style="margin:0;padding:0;background:none;font-size:inherit"><span class="idot"></span><b>${it}</b></span></div><div class="mbs">${is || "&nbsp;"}</div></div>`)(coolIntent(r)),
+    tile("Into PC · cube", tc(cube), `${sg(mCube)} over dew · max ${fx(ocHi("cube"), 0)}`, mCol(mCube)),
+    tile("T1 · return", tc(r.T1), `${sg(r.T1 != null && r.T2 != null ? r.T1 - r.T2 : null)} vs T2`),
+    tile("T2 · mixing", tc(r.T2), `set ${fx(r.Tset, 1)} · ${sg(mT2)} over dew`, mCol(mT2)),
+    tile("T3 · outdoor rad", tc(r.T3), `V2 ${fx(r.V2out, 0, " %")} outdoor`),
+    tile("Dew point", tc(r.DP), `A ${fx(r.DP_A, 1)} · B ${fx(r.DP_B, 1)} · R ${fx(r.DP_R, 1)}`),
+    tile("Room · case air", `${fx(r.Troom, 1)}<small> / </small>${fx(caseT, 1)}${C("°C")}`, `RH ${fx(r.RH_R, 0)} / ${fx(caseH, 0)} %`),
+    rq.req_p1 == null ? tile("P1 · PC pump", `${rpm("w_pump")}${C("rpm")}`, "BIOS W_PUMP+ curve")
+      : tile("P1 · PC pump", `${fx(rq.req_p1, 0)}${C("%")}`, `${rpm("w_pump")} rpm`),
+    tile("P2 · outdoor pump", r.pen === 0 ? "off" : `${fx(r.pump, 0)}${C("%")}`, `${fx(r.rpmP2, 0)} rpm`),
+    tile("Fans · outdoor", `${fx(r.fan, 0)}${C("%")}`, `${fx(r.rpmF2, 0)} rpm`),
+    tile("Fans · PC", `${fx(rq.req_rad, 0)}${C("%")}`, rq.oc_fan_hot ? "CPU / VRM hot: normal curve" : `rads ${rpm("cpu_fan")} · ${rpm("cha2")} · top ${rpm("cha1")} rpm`, rq.oc_fan_hot ? "--orange" : null),
+    tile("GPU", tc(g("gpu_t")), `hot spot ${fx(g("gpu_hot"), 0)} · ${fx(g("gpu_w"), 0)} W`, heatVar(g("gpu_t"))),
+  ].join("");
+
+  $("ocSince").textContent = `· min / max since ${new Date(ocSince).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+  const act = Object.entries(lim).filter(([k, x]) => x >= 1 && !/Max Turbo Limit/.test(k)).map(([k]) => k);
+  const thrN = Object.values(thr).filter(x => x >= 1).length;
+  if (thrN) act.unshift(`${thrN} core${thrN > 1 ? "s" : ""} throttling`);
+  $("ocLim").innerHTML = act.length ? `<span class="mbchip warn" title="${act.join(", ")}">${act.slice(0, 2).join(" · ")}${act.length > 2 ? ` +${act.length - 2}` : ""}</span>`
+                                    : `<span class="mbchip ok">no throttling · no limits</span>`;
+
+  const row = (k, val, em = "", col = "") => `<div class="mbrr"><span>${k}</span><b>${val}</b><em${col ? ` style="color:var(${col})"` : ""}>${em}</em></div>`;
+  const list = (k, rs) => `<div class="mbt"><div class="mbk">${k}</div><div class="mbrails">${rs.join("")}</div></div>`;
+  const mm = (k, n) => `${fx(ocLo(k), n)} – ${fx(ocHi(k), n)}`;
+  $("ocSum").innerHTML = [
+    list("Package", [
+      row("Package", fx(cpu.pkg_t, 0, " °C"), `max ${fx(ocHi("pkg_t"), 0)}`, heatVar(ocHi("pkg_t"))),
+      row("Core max", fx(cpu.max_t, 0, " °C"), `max ${fx(ocHi("max_t"), 0)}`, heatVar(ocHi("max_t"))),
+      row("Power · IA", `${fx(cpu.pkg_w, 0)} · ${fx(cpu.ia_w, 0)} W`, `max ${fx(ocHi("pkg_w"), 0)}`),
+      row("PL1 · PL2", `${fx(oc.pl1, 0)} · ${fx(oc.pl2, 0)} W`),
+      row("Load", fx(cpu.use, 0, " %"), oc.odcm != null && oc.odcm < 100 ? `ODCM ${fx(oc.odcm, 0)} %` : ""),
+    ]),
+    list("Vcore", [
+      row("DLVRin Vcore", fx(cpu.vcore, 3, " V"), mm("vcore", 3)),
+      row("VRM out", fx(vrm.v, 3, " V"), mm("vout", 3)),
+      row("Latch min / max", `${fx(oc.latch_Min, 3)} / ${fx(oc.latch_Max, 3)}`, `Δ ${fx(oc.latch_delta, 3)}`),
+      row("VR VCC current", fx(oc.vr_a, 0, " A"), `max ${fx(ocHi("vr_a"), 0)}`),
+      row("VRM · VR VCC", `${fx(cpu.vrm_t, 0)} · ${fx(cpu.vr_t, 0)} °C`, `max ${fx(ocHi("vrm_t"), 0)}`, heatVar(ocHi("vrm_t"))),
+    ]),
+    list("Contact watch", [
+      row("CPU avg (P-cores)", fx(P_ORDER.map(n => (c[n] || {}).t).every(x => x != null) ? P_ORDER.reduce((a, n) => a + c[n].t, 0) / P_ORDER.length : null, 1, " °C")),
+      row("P1 − other P", ocLm.p1 == null ? "--" : `${ocLm.p1 >= 0 ? "+" : ""}${ocLm.p1.toFixed(1)} °C`, ocLm.p1 == null ? "under load" : `max ${fx(ocHi("lm_p1"), 0)}`, ocLm.p1 != null && ocLm.p1 > 6 ? "--orange" : ""),
+      row("P0 − other P", ocLm.p0 == null ? "--" : `${ocLm.p0 >= 0 ? "+" : ""}${ocLm.p0.toFixed(1)} °C`, ocLm.p0 == null ? "under load" : `max ${fx(ocHi("lm_p0"), 0)}`, ocLm.p0 != null && ocLm.p0 > 6 ? "--orange" : ""),
+      row("Hottest core − cube", ocLm.cc == null ? "--" : `${ocLm.cc.toFixed(1)} °C`, ocLm.w == null ? "" : `@ ${ocLm.w.toFixed(0)} W`),
+    ]),
+    list("Ring · NGU · D2D", [
+      row("Ring / LLC", ghz(cpu.ring_clk), `${fx(oc.uncore_ratio, 0)}×`),
+      row("Ring DLVR", fx(cpu.ring_v, 3, " V"), mm("ring_v", 3)),
+      row("NGU", ghz(oc.ngu_clk)),
+      row("D2D", ghz(oc.d2d_clk)),
+      row("Uncore VID", fx(oc.uncore_vid, 3, " V")),
+      row("BCLK", fx(oc.bclk, 2, " MHz")),
+    ]),
+  ].join("");
+
+  // per core: P-cores in die order, then the E-core clusters
+  const ids = Object.keys(c).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);   // HWiNFO order 0..23
+  const order = (ids.length ? ids : [...Array(24).keys()]).map(n => [P_ORDER.includes(n) ? "P" : "E", n]);
+  // compact: min–max in one cell; P-core rows indigo, E-core rows teal, every other row a little brighter
+  const h = [`<tr><th>Core</th><th>°C</th><th class="dim">min–max</th><th>V</th><th class="dim">min–max</th><th>MHz</th><th class="dim">max</th><th>eff.</th><th>Load</th></tr>`];
+  order.forEach(([k, n], i) => {
+    const q = c[n] || {}, th = thr[n] >= 1;
+    h.push(`<tr class="${k === "P" ? "pc" : "ec"}"><td class="k">${k}${n}${th ? ' <span style="color:var(--red)" title="thermal throttling">●</span>' : ""}</td>` +
+      `<td style="color:var(${heatVar(q.t)});font-weight:700">${fx(q.t, 0)}</td>` +
+      `<td class="dim">${fx(ocLo("t" + n), 0)}–<span style="color:var(${heatVar(ocHi("t" + n))})">${fx(ocHi("t" + n), 0)}</span></td>` +
+      `<td>${fx(q.v, 3)}</td><td class="dim">${fx(ocLo("v" + n), 3)}–${fx(ocHi("v" + n), 3)}</td>` +
+      `<td>${fx(q.clk, 0)}</td><td class="dim">${fx(ocHi("c" + n), 0)}</td><td>${fx(q.eclk, 0)}</td><td>${fx(q.use, 0, " %")}</td></tr>`);
+  });
+  $("ocCores").innerHTML = h.join("");
+
+  const vo = k => voff[k] == null ? "--" : `${voff[k] >= 0 ? "+" : ""}${(voff[k] * 1000).toFixed(0)} mV`;
+  const dA = dimm["2"] || {}, dB = dimm["0"] || {};
+  const dMax = dA.t != null || dB.t != null ? Math.max(dA.t ?? -99, dB.t ?? -99) : null;
+  const wN = Object.values(whea).reduce((a, b) => a + b, 0);
+  $("ocMore").innerHTML = [
+    list("OC ratio limits", [
+      row("IA (cores)", fx(oc.ia_ratio, 0, "×")), row("CLR (ring)", fx(oc.ring_ratio, 0, "×")),
+      row("NGU", fx(oc.ngu_ratio, 0, "×")), row("MemSS", fx(oc.memss_ratio, 0, "×")),
+    ]),
+    list("Voltage offsets", [
+      row("IA", vo("IA")), row("CLR (ring)", vo("CLR (CBo/LLC/Ring)")), row("SA", vo("SA")), row("NGU", vo("NGU")), row("MemSS", vo("MemSS")),
+    ]),
+    list("SoC rails", [
+      row("VCCSA", fx(mb.vccsa, 3, " V"), mm("vccsa", 3)), row("IMC VDD", fx(mb.imc, 3, " V")), row("VCCIO", fx(mb.vccio, 3, " V")),
+      row("SOC 1.8V · VNNAON", `${fx(mb.soc18, 3)} · ${fx(mb.vnnaon, 3)}`),
+      row("P0 / P7 DLVR", `${fx(dl["P-core 0"], 3)} / ${fx(dl["P-core 7"], 3)}`),
+      row("+12V min", fx(ocLo("v12"), 3, " V"), `now ${fx(mb.v12, 3)}`),
+    ]),
+    list("Memory", [
+      row("Speed", mem.clk == null ? "--" : `DDR5-${Math.round(mem.clk * 2 / 100) * 100}`, `G${fx(mem["Gear Mode"], 0)} · ${fx(mem["Command Rate"], 0)}T`),
+      row("Timings", ["Tcas", "Trcd", "Trp", "Tras"].map(k => fx(mem[k], 0)).join("-"), `tRFC ${fx(mem.Trfc, 0)}`),
+      row("DIMM A · B", `${fx(dA.t, 1)} · ${fx(dB.t, 1)} °C`, "", heatVar(dMax)),
+      row("VDD A / B", `${fx(dA.vdd, 3)} / ${fx(dB.vdd, 3)} V`),
+      row("WHEA", Object.keys(whea).length ? String(wN) : "--", "", wN > 0 ? "--red" : ""),
+    ]),
+  ].join("");
+}
+
+// ---------- data ----------
+async function boot() {
+  try {
+    const s = await (await fetch("/state")).json();
+    rows = s.rows; info = s.info; s.events.forEach(addLog); if (s.pc) { pc = s.pc; hwBanner(pc); } if (s.prog) prog = s.prog;
+    const lr = rows[rows.length - 1];
+    if (lr && !lr.hist) lastRowAt = Date.now();   // history reloaded from the logs is not live data
+  } catch (e) {}
+  legend(); applyTheme(); connRender(); renderPc();
+  const es = new EventSource("/stream");
+  es.addEventListener("row", e => { rows.push(JSON.parse(e.data)); if (rows.length > 28800) rows.shift(); lastRowAt = Date.now(); render(); connRender(); });
+  es.addEventListener("event", e => addLog(JSON.parse(e.data)));
+  es.addEventListener("pc", e => {
+    pc = JSON.parse(e.data); hwBanner(pc);
+    const v = pc.v || {};
+    pcHist.push([pc.t || Date.now() / 1000, v.cpu_t ? v.cpu_t.v : null, v.gpu_t ? v.gpu_t.v : null,
+                 v.cpu_w ? v.cpu_w.v : null, v.gpu_w ? v.gpu_w.v : null]);
+    while (pcHist.length > 700) pcHist.shift();
+    renderPc();
+  });
+  es.addEventListener("info", e => { info = JSON.parse(e.data); connRender(); });
+  es.addEventListener("prog", e => { prog = JSON.parse(e.data); renderProg(); });
+  es.onerror = () => { info.connected = false; info.error = "Dashboard server stopped (reconnecting…)"; connRender(); };
+  es.onopen = async () => {               // reconnected: pick up status, program and history gaps right away
+    try { const s = await (await fetch("/state")).json(); info = s.info; if (s.prog) prog = s.prog; connRender(); renderProg(); } catch (e) {}
+  };
+  setInterval(connRender, 1000);
+}
+boot();
+</script>
+</body>
+</html>

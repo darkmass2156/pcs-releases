@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- PCS desktop app (2026-11-22, owner): the dashboard page in its own window + tray icon, instead of a browser tab.
+       Portable: no paths of this PC; settings and the WebView2 profile live in %LOCALAPPDATA%\PCS.
+       Publish: dotnet publish -c Release -o dist  (self-contained single exe, no .NET install needed). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>PCS</AssemblyName>
+    <RootNamespace>PcsApp</RootNamespace>
+    <Version>0.5.11</Version>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <ApplicationIcon>pcs.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="pcs.ico" />
+  </ItemGroup>
+</Project>
